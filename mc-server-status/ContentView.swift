@@ -1,12 +1,5 @@
-//
-//  ContentView.swift
-//  mc-server-status
-//
-//  Created by Aaron212 on 2025-07-11.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -24,15 +17,15 @@ struct ContentView: View {
                 }
                 .onDelete(perform: deleteItems)
             }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
+            #if os(macOS)
+                .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+            #endif
             .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
+                #if os(iOS)
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        EditButton()
+                    }
+                #endif
                 ToolbarItem {
                     Button(action: addItem) {
                         Label("Add Item", systemImage: "plus")

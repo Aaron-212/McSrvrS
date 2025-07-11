@@ -1,15 +1,8 @@
-//
-//  mc_server_statusApp.swift
-//  mc-server-status
-//
-//  Created by Aaron212 on 2025-07-11.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
-struct mc_server_statusApp: App {
+struct McServerStatusApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,

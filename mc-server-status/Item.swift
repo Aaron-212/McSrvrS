@@ -1,10 +1,3 @@
-//
-//  Item.swift
-//  mc-server-status
-//
-//  Created by Aaron212 on 2025-07-11.
-//
-
 import Foundation
 import SwiftData
 
