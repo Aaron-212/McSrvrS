@@ -6,6 +6,7 @@ struct ContentView: View {
     @Query private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
+    @State private var pinger = ServerPinger()
 
     var body: some View {
         NavigationSplitView {
@@ -16,8 +17,17 @@ struct ContentView: View {
                     } label: {
                         ServerItemView(server: server)
                     }
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            Task {
+                                await server.updateStatus(using: pinger)
+                            }
+                        } label: {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                    }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete(perform: deleteServers)
             }
             .listStyle(.plain)
             .navigationTitle("MC Server Status")
@@ -29,16 +39,22 @@ struct ContentView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         EditButton()
                     }
+                #elseif os(macOS)
+                    ToolbarItem(placement: .automatic) {
+                        Button(action: refreshAllServers) {
+                            Label("Refresh All", systemImage: "arrow.clockwise")
+                        }
+                    }
                 #endif
                 ToolbarItem(placement: .automatic) {
-                    Button(action: addItem) {
+                    Button(action: addServer) {
                         Label("Add Server", systemImage: "plus")
                     }
                 }
             }
             .searchable(text: $searchText)
             .refreshable {
-                // Implement refresh logic if needed
+                refreshAllServers()
             }
         } detail: {
             Text("Select an item")
@@ -46,16 +62,31 @@ struct ContentView: View {
         .sheet(isPresented: $showingServerForm) {
             ServerForm()
         }
+        .onAppear {
+            refreshAllServers()
+        }
     }
 
-    private func addItem() {
+    private func addServer() {
         showingServerForm = true
     }
 
-    private func deleteItems(offsets: IndexSet) {
+    private func deleteServers(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
                 modelContext.delete(servers[index])
+            }
+        }
+    }
+
+    private func refreshAllServers() {
+        Task {
+            await withTaskGroup(of: Void.self) { group in
+                for server in servers {
+                    group.addTask {
+                        await server.updateStatus(using: pinger)
+                    }
+                }
             }
         }
     }

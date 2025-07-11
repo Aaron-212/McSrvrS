@@ -6,8 +6,11 @@ struct ServerForm: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String = ""
-    @State private var domain: String = ""
+    @State private var host: String = ""
     @State private var port: UInt16? = 25565
+    
+    // Add ServerPinger instance
+    private let serverPinger = ServerPinger()
 
     var body: some View {
         NavigationStack {
@@ -18,7 +21,10 @@ struct ServerForm: View {
                 ) {
                     TextField("Server Name", text: $name)
 
-                    TextField("Domain/IP Address", text: $domain)
+                    TextField("Domain/IP Address", text: $host)
+                    #if os(iOS)
+                        .textInputAutocapitalization(.none)
+                    #endif
 
                     TextField("Port", value: $port, formatter: NumberFormatter())
                         #if os(iOS)
@@ -51,7 +57,7 @@ struct ServerForm: View {
 
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !domain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func saveServer() {
@@ -59,7 +65,7 @@ struct ServerForm: View {
 
         let newServer = Server(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-            domain: domain.trimmingCharacters(in: .whitespacesAndNewlines),
+            host: host.trimmingCharacters(in: .whitespacesAndNewlines),
             port: portNumber
         )
 
@@ -67,6 +73,12 @@ struct ServerForm: View {
 
         do {
             try modelContext.save()
+            
+            // Ping the server immediately after saving
+            Task {
+                await newServer.updateStatus(using: serverPinger)
+            }
+            
             dismiss()
         } catch {
             // Handle error - you might want to show an alert here

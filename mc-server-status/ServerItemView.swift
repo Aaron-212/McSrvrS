@@ -5,12 +5,23 @@ struct ServerItemView: View {
 
     var body: some View {
         HStack {
-            // Server Icon placegholder
-            Rectangle()
-                .fill(Color.gray.opacity(0.2))
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            // Server Icon
+            Group {
+                if case .success(let status) = server.serverState,
+                   let favicon = status.decodeBase64PNG {
+                    favicon
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 64, height: 64)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else {
+                    Image("pack")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 64, height: 64)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            }
             VStack(alignment: .leading) {
                 HStack {
                     Text(server.name)
@@ -23,34 +34,41 @@ struct ServerItemView: View {
                 .lineLimit(1)
 
                 Group {
-                    switch server.state {
-                    case .online:
+                    switch server.serverState {
+                    case .success(let status):
                         HStack {
                             Group {
-                                Image(systemName: "cellularbars", variableValue: 0.75)
-                                Text("20 ms")
+                                Image(systemName: "cellularbars", variableValue: status.latencyVariableColor)
+                                Text(status.latencyDescription)
                             }
                             Group {
                                 Image(systemName: "person.2.fill")
-                                Text("0 / 2")
+                                Text(status.playersDescription)
                             }
                         }
                         .font(.callout)
-                        Text("Server description possibly multiline but whatever you want to put here")
+                        Text(status.motd)
                             .lineLimit(1)
                             .font(.footnote)
                             .fontDesign(.monospaced)
                             .foregroundStyle(.secondary)
-                    case .offline:
-                        Label("Offline", systemImage: "xmark.octagon.fill")
+                    case .error(_):
+                        Group {
+                            Image(systemName: "xmark.circle.fill")
+                            Text("Unable to fetch server status")
+                        }
                             .font(.callout)
-                        Text("Last seen at \(server.lastSeenDate.formatted(date: .abbreviated, time: .shortened))")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    case .pinging:
+                        Group {
+                            if let lastSeenDate = server.lastSeenDate {
+                                Text("Last seen at \(lastSeenDate.formatted(date: .abbreviated, time: .shortened))")
+                            } else {
+                                Text("Never seen")
+                            }
+                        }
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                    case .loading:
                         ProgressView()
-                    case .unknown:
-                        Text("Unknown")
                     }
                 }
             }
@@ -59,6 +77,6 @@ struct ServerItemView: View {
 }
 
 #Preview {
-    let server = Server(name: "Example Server", domain: "example.com", port: 25565)
+    let server = Server(name: "Example Server", host: "example.com", port: 25565)
     ServerItemView(server: server)
 }
