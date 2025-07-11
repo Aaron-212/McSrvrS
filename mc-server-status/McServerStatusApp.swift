@@ -1,11 +1,11 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @main
 struct McServerStatusApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Server.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

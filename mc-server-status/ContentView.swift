@@ -3,20 +3,24 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Query private var servers: [Server]
+    @State private var searchText = ""
+    @State private var showingServerForm = false
 
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(items) { item in
+                ForEach(servers) { server in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        Text("Server")
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        ServerItemView(server: server)
                     }
                 }
                 .onDelete(perform: deleteItems)
             }
+            .listStyle(.plain)
+            .navigationTitle("MC Server Status")
             #if os(macOS)
                 .navigationSplitViewColumnWidth(min: 180, ideal: 200)
             #endif
@@ -26,28 +30,32 @@ struct ContentView: View {
                         EditButton()
                     }
                 #endif
-                ToolbarItem {
+                ToolbarItem(placement: .automatic) {
                     Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                        Label("Add Server", systemImage: "plus")
                     }
                 }
+            }
+            .searchable(text: $searchText)
+            .refreshable {
+                // Implement refresh logic if needed
             }
         } detail: {
             Text("Select an item")
         }
+        .sheet(isPresented: $showingServerForm) {
+            ServerForm()
+        }
     }
 
     private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
+        showingServerForm = true
     }
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(servers[index])
             }
         }
     }
@@ -55,5 +63,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: Server.self, inMemory: true)
 }
