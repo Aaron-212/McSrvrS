@@ -11,6 +11,18 @@ struct ServerForm: View {
     
     // Add ServerPinger instance
     private let serverPinger = ServerPinger()
+    
+    // Optional server for editing
+    let serverToEdit: Server?
+    
+    // Computed property to determine if we're editing
+    private var isEditing: Bool {
+        serverToEdit != nil
+    }
+    
+    init(serverToEdit: Server? = nil) {
+        self.serverToEdit = serverToEdit
+    }
 
     var body: some View {
         NavigationStack {
@@ -32,7 +44,7 @@ struct ServerForm: View {
                         #endif
                 }
             }
-            .navigationTitle("Add Server")
+            .navigationTitle(isEditing ? "Edit Server" : "Add Server")
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
             #elseif os(macOS)
@@ -52,6 +64,13 @@ struct ServerForm: View {
                     .disabled(!isFormValid)
                 }
             }
+            .onAppear {
+                if let serverToEdit = serverToEdit {
+                    name = serverToEdit.name
+                    host = serverToEdit.host
+                    port = serverToEdit.port
+                }
+            }
         }
     }
 
@@ -62,21 +81,38 @@ struct ServerForm: View {
 
     private func saveServer() {
         let portNumber = port ?? 25565
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let newServer = Server(
-            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-            host: host.trimmingCharacters(in: .whitespacesAndNewlines),
-            port: portNumber
-        )
-
-        modelContext.insert(newServer)
+        var serverToUpdate: Server
+        
+        if let existingServer = serverToEdit {
+            // Update existing server
+            existingServer.name = trimmedName
+            existingServer.host = trimmedHost
+            existingServer.port = portNumber
+            
+            // Reset server state since host/port might have changed
+            existingServer.serverState = .loading
+            existingServer.lastUpdatedDate = Date()
+            serverToUpdate = existingServer
+        } else {
+            // Create new server
+            let newServer = Server(
+                name: trimmedName,
+                host: trimmedHost,
+                port: portNumber
+            )
+            modelContext.insert(newServer)
+            serverToUpdate = newServer
+        }
 
         do {
             try modelContext.save()
             
             // Ping the server immediately after saving
             Task {
-                await newServer.updateStatus(using: serverPinger)
+                await serverToUpdate.updateStatus(using: serverPinger)
             }
             
             dismiss()

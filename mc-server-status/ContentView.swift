@@ -13,7 +13,7 @@ struct ContentView: View {
             List {
                 ForEach(servers) { server in
                     NavigationLink {
-                        Text("Server")
+                        ServerDetailView(server: server)
                     } label: {
                         ServerItemView(server: server)
                     }
