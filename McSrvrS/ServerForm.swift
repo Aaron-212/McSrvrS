@@ -8,15 +8,15 @@ struct ServerForm: View {
     @State private var name: String = ""
     @State private var host: String = ""
     @State private var port: UInt16? = 25565
-    
+
     // Optional server for editing
     let serverToEdit: Server?
-    
+
     // Computed property to determine if we're editing
     private var isEditing: Bool {
         serverToEdit != nil
     }
-    
+
     init(serverToEdit: Server? = nil) {
         self.serverToEdit = serverToEdit
     }
@@ -28,19 +28,30 @@ struct ServerForm: View {
                     header: Text("Server Details"),
                     footer: Text("Default port for Minecraft servers is 25565")
                 ) {
-                    TextField("Server Name", text: $name)
+                    LabeledContent("Server Name") {
+                        TextField("Example Server", text: $name)
+                            #if os(iOS)
+                                .multilineTextAlignment(.trailing)
+                            #endif
+                    }
 
-                    TextField("Domain/IP Address", text: $host)
-                    #if os(iOS)
-                        .textInputAutocapitalization(.none)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                    #endif
+                    LabeledContent("Host") {
+                        TextField("example.net", text: $host)
+                            #if os(iOS)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                                .keyboardType(.URL)
+                                .multilineTextAlignment(.trailing)
+                            #endif
+                    }
 
-                    TextField("Port", value: $port, formatter: NumberFormatter())
-                        #if os(iOS)
-                            .keyboardType(.numberPad)
-                        #endif
+                    LabeledContent("Port") {
+                        TextField("25565", value: $port, formatter: NumberFormatter())
+                            #if os(iOS)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                            #endif
+                    }
                 }
             }
             .navigationTitle(isEditing ? "Edit Server" : "Add Server")
@@ -84,13 +95,13 @@ struct ServerForm: View {
         let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
 
         var serverToUpdate: Server
-        
+
         if let existingServer = serverToEdit {
             // Update existing server
             existingServer.name = trimmedName
             existingServer.host = trimmedHost
             existingServer.port = portNumber
-            
+
             // Reset server state since host/port might have changed
             existingServer.serverState = .loading
             existingServer.lastUpdatedDate = Date()
@@ -108,12 +119,12 @@ struct ServerForm: View {
 
         do {
             try modelContext.save()
-            
+
             // Ping the server immediately after saving
             Task {
                 await serverToUpdate.updateStatus()
             }
-            
+
             dismiss()
         } catch {
             // Handle error - you might want to show an alert here
