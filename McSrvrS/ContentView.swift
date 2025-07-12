@@ -7,7 +7,6 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingServerForm = false
     @State private var showingServerFilter = false
-    @State private var pinger = JavaServerPinger.shared
 
     var body: some View {
         NavigationSplitView {
@@ -21,7 +20,7 @@ struct ContentView: View {
                     .swipeActions(edge: .leading) {
                         Button {
                             Task {
-                                await server.updateStatus(using: pinger)
+                                await server.updateStatus()
                             }
                         } label: {
                             Label("Refresh", systemImage: "arrow.clockwise")
@@ -108,7 +107,7 @@ struct ContentView: View {
             await withTaskGroup(of: Void.self) { group in
                 for server in servers {
                     group.addTask {
-                        await server.updateStatus(using: pinger)
+                        await server.updateStatus()
                     }
                 }
             }

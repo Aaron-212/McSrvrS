@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ServerDetailView: View {
     let server: Server
-    @State private var pinger = JavaServerPinger.shared
     @State private var showingEditForm = false
 
     var body: some View {
@@ -380,7 +379,7 @@ struct ServerDetailView: View {
 
     private func refreshServer() {
         Task {
-            await server.updateStatus(using: pinger)
+            await server.updateStatus()
         }
     }
 }

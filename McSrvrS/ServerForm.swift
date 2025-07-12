@@ -9,9 +9,6 @@ struct ServerForm: View {
     @State private var host: String = ""
     @State private var port: UInt16? = 25565
     
-    // Add JavaServerPinger instance
-private let serverPinger = JavaServerPinger.shared
-    
     // Optional server for editing
     let serverToEdit: Server?
     
@@ -112,7 +109,7 @@ private let serverPinger = JavaServerPinger.shared
             
             // Ping the server immediately after saving
             Task {
-                await serverToUpdate.updateStatus(using: serverPinger)
+                await serverToUpdate.updateStatus()
             }
             
             dismiss()

@@ -161,10 +161,10 @@ final class Server {
     // MARK: - Server Status Updates
 
     @MainActor
-    func updateStatus(using pinger: JavaServerPinger) async {
+    func updateStatus() async {
         self.serverState = .loading
 
-        let pingResult = await pinger.ping(host: self.host, port: self.port)
+        let pingResult = await JavaServerPinger.shared.ping(host: self.host, port: self.port)
 
         switch pingResult {
         case .success(let (json, latency)):
