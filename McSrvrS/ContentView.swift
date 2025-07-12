@@ -6,6 +6,7 @@ struct ContentView: View {
     @Query private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
+    @State private var isFilteringServer = false
     @State private var showingServerFilter = false
 
     var body: some View {
@@ -39,13 +40,11 @@ struct ContentView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         EditButton()
                     }
-                ToolbarItem(placement: .bottomBar) {
-                        Button(action: serverFilter) {
-                            Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
-                        }
+                    ToolbarItem(placement: .bottomBar) {
+                        filterContextMenu
                     }
-                ToolbarSpacer(.fixed, placement: .bottomBar)
-                DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                    ToolbarSpacer(.fixed, placement: .bottomBar)
+                    DefaultToolbarItem(kind: .search, placement: .bottomBar)
                 #elseif os(macOS)
                     ToolbarItem(placement: .automatic) {
                         Button(action: refreshAllServers) {
@@ -53,9 +52,7 @@ struct ContentView: View {
                         }
                     }
                     ToolbarItem(placement: .automatic) {
-                        Button(action: serverFilter) {
-                            Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
-                        }
+                        filterContextMenu
                     }
                 #endif
                 ToolbarItem(placement: .automatic) {
@@ -77,13 +74,15 @@ struct ContentView: View {
         .sheet(isPresented: $showingServerForm) {
             ServerForm()
         }
-        .sheet(isPresented: $showingServerFilter) {
-            Text("Server Filter Placeholder")
-                .presentationDetents([.medium])
-        }
         .onAppear {
             refreshAllServers()
         }
+    }
+
+    private var filterContextMenu: Menu = Menu {
+        Text("hello")
+    } label: {
+        Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
     }
 
     private func addServer() {
@@ -91,7 +90,7 @@ struct ContentView: View {
     }
 
     private func serverFilter() {
-        showingServerFilter = true
+        isFilteringServer = true
     }
 
     private func deleteServers(offsets: IndexSet) {
