@@ -8,11 +8,22 @@ struct ContentView: View {
     @State private var showingServerForm = false
     @State private var isFilteringServer = false
     @State private var showingServerFilter = false
+    
+    private var filteredServers: [Server] {
+        if searchText.isEmpty {
+            return servers
+        } else {
+            return servers.filter { server in
+                server.name.localizedCaseInsensitiveContains(searchText) ||
+                server.addressDescription.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
 
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(servers) { server in
+                ForEach(filteredServers) { server in
                     NavigationLink {
                         ServerDetailView(server: server)
                     } label: {
@@ -97,7 +108,7 @@ struct ContentView: View {
     private func deleteServers(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(servers[index])
+                modelContext.delete(filteredServers[index])
             }
         }
     }

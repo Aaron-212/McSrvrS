@@ -33,6 +33,8 @@ struct ServerForm: View {
                     TextField("Domain/IP Address", text: $host)
                     #if os(iOS)
                         .textInputAutocapitalization(.none)
+                        .autocorrectionDisabled()
+                        .keyboardType(.URL)
                     #endif
 
                     TextField("Port", value: $port, formatter: NumberFormatter())
