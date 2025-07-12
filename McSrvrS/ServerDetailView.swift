@@ -57,23 +57,9 @@ struct ServerDetailView: View {
     private var headerSection: some View {
         HStack {
             // Server Icon
-            Group {
-                if case .success(let status) = server.serverState,
-                    let favicon = status.decodeBase64PNG
-                {
-                    favicon
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                } else {
-                    Image("pack")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-            }
+            server.faviconView
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             .shadow(radius: 4)
 
             VStack(alignment: .leading) {

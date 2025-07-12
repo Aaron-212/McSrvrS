@@ -6,22 +6,9 @@ struct ServerItemView: View {
     var body: some View {
         HStack {
             // Server Icon
-            Group {
-                if case .success(let status) = server.serverState,
-                   let favicon = status.decodeBase64PNG {
-                    favicon
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 64, height: 64)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                } else {
-                    Image("pack")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 64, height: 64)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-            }
+            server.faviconView
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             VStack(alignment: .leading) {
                 HStack {
                     Text(server.name)
