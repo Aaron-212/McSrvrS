@@ -24,11 +24,13 @@ struct ServerDetailView: View {
             .padding()
         }
         .toolbar {
+            #if os(macOS)
             ToolbarItem {
                 Button(action: refreshServer) {
                     Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
                 }
             }
+            #endif
             ToolbarItem {
                 Button(action: { showingEditForm = true }) {
                     Label("Edit", systemImage: "pencil")
