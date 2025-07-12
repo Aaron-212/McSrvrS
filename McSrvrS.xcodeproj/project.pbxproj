@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		8D5E8D412E20BCBF007603B3 /* mc-server-status.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mc-server-status.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D5E8D412E20BCBF007603B3 /* McSrvrS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = McSrvrS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8D5E8D432E20BCBF007603B3 /* mc-server-status */ = {
+		8D5E8D432E20BCBF007603B3 /* McSrvrS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "mc-server-status";
+			path = McSrvrS;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		8D5E8D382E20BCBF007603B3 = {
 			isa = PBXGroup;
 			children = (
-				8D5E8D432E20BCBF007603B3 /* mc-server-status */,
+				8D5E8D432E20BCBF007603B3 /* McSrvrS */,
 				8D5E8D422E20BCBF007603B3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		8D5E8D422E20BCBF007603B3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D5E8D412E20BCBF007603B3 /* mc-server-status.app */,
+				8D5E8D412E20BCBF007603B3 /* McSrvrS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D5E8D402E20BCBF007603B3 /* mc-server-status */ = {
+		8D5E8D402E20BCBF007603B3 /* McSrvrS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8D5E8D4E2E20BCC2007603B3 /* Build configuration list for PBXNativeTarget "mc-server-status" */;
+			buildConfigurationList = 8D5E8D4E2E20BCC2007603B3 /* Build configuration list for PBXNativeTarget "McSrvrS" */;
 			buildPhases = (
 				8D5E8D3D2E20BCBF007603B3 /* Sources */,
 				8D5E8D3E2E20BCBF007603B3 /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				8D5E8D432E20BCBF007603B3 /* mc-server-status */,
+				8D5E8D432E20BCBF007603B3 /* McSrvrS */,
 			);
-			name = "mc-server-status";
+			name = McSrvrS;
 			packageProductDependencies = (
 			);
 			productName = "mc-server-status";
-			productReference = 8D5E8D412E20BCBF007603B3 /* mc-server-status.app */;
+			productReference = 8D5E8D412E20BCBF007603B3 /* McSrvrS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8D5E8D3C2E20BCBF007603B3 /* Build configuration list for PBXProject "mc-server-status" */;
+			buildConfigurationList = 8D5E8D3C2E20BCBF007603B3 /* Build configuration list for PBXProject "McSrvrS" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +99,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D5E8D402E20BCBF007603B3 /* mc-server-status */,
+				8D5E8D402E20BCBF007603B3 /* McSrvrS */,
 			);
 		};
 /* End PBXProject section */
@@ -244,8 +244,9 @@
 		8D5E8D4F2E20BCC2007603B3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = McSrvrS;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4WG9P84KNJ;
@@ -264,6 +265,8 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MCSrvrS;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -279,18 +282,19 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "personal.aaron212.mc-server-status";
+				PRODUCT_BUNDLE_IDENTIFIER = personal.aaron212.mcsrvrs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -298,8 +302,9 @@
 		8D5E8D502E20BCC2007603B3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = McSrvrS;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 4WG9P84KNJ;
@@ -318,6 +323,8 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MCSrvrS;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -333,18 +340,19 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "personal.aaron212.mc-server-status";
+				PRODUCT_BUNDLE_IDENTIFIER = personal.aaron212.mcsrvrs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -352,7 +360,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8D5E8D3C2E20BCBF007603B3 /* Build configuration list for PBXProject "mc-server-status" */ = {
+		8D5E8D3C2E20BCBF007603B3 /* Build configuration list for PBXProject "McSrvrS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8D5E8D4C2E20BCC2007603B3 /* Debug */,
@@ -361,7 +369,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		8D5E8D4E2E20BCC2007603B3 /* Build configuration list for PBXNativeTarget "mc-server-status" */ = {
+		8D5E8D4E2E20BCC2007603B3 /* Build configuration list for PBXNativeTarget "McSrvrS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8D5E8D4F2E20BCC2007603B3 /* Debug */,

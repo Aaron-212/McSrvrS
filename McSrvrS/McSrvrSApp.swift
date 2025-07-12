@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct McServerStatusApp: App {
+struct McSrvrSApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Server.self

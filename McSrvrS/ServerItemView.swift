@@ -69,6 +69,7 @@ struct ServerItemView: View {
                         .foregroundStyle(.secondary)
                     case .loading:
                         ProgressView()
+                            .progressViewStyle(.linear)
                     }
                 }
             }

@@ -6,6 +6,7 @@ struct ContentView: View {
     @Query private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
+    @State private var showingServerFilter = false
     @State private var pinger = ServerPinger()
 
     var body: some View {
@@ -32,17 +33,29 @@ struct ContentView: View {
             .listStyle(.plain)
             .navigationTitle("MC Server Status")
             #if os(macOS)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+                .navigationSplitViewColumnWidth(min: 250, ideal: 320)
             #endif
             .toolbar {
                 #if os(iOS)
                     ToolbarItem(placement: .navigationBarTrailing) {
                         EditButton()
                     }
+                ToolbarItem(placement: .bottomBar) {
+                        Button(action: serverFilter) {
+                            Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
+                        }
+                    }
+                ToolbarSpacer(.fixed, placement: .bottomBar)
+                DefaultToolbarItem(kind: .search, placement: .bottomBar)
                 #elseif os(macOS)
                     ToolbarItem(placement: .automatic) {
                         Button(action: refreshAllServers) {
                             Label("Refresh All", systemImage: "arrow.clockwise")
+                        }
+                    }
+                    ToolbarItem(placement: .automatic) {
+                        Button(action: serverFilter) {
+                            Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
                         }
                     }
                 #endif
@@ -52,15 +65,22 @@ struct ContentView: View {
                     }
                 }
             }
-            .searchable(text: $searchText)
             .refreshable {
                 refreshAllServers()
             }
         } detail: {
-            Text("Select an item")
+            Text("Select a Server")
+                .font(.title)
+                .foregroundStyle(.tertiary)
+                .bold()
         }
+        .searchable(text: $searchText, prompt: "Search Servers")
         .sheet(isPresented: $showingServerForm) {
             ServerForm()
+        }
+        .sheet(isPresented: $showingServerFilter) {
+            Text("Server Filter Placeholder")
+                .presentationDetents([.medium])
         }
         .onAppear {
             refreshAllServers()
@@ -69,6 +89,10 @@ struct ContentView: View {
 
     private func addServer() {
         showingServerForm = true
+    }
+
+    private func serverFilter() {
+        showingServerFilter = true
     }
 
     private func deleteServers(offsets: IndexSet) {
