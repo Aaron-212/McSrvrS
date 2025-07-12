@@ -34,10 +34,9 @@ struct ServerItemView: View {
                             }
                         }
                         .font(.callout)
-                        Text(status.motd)
-                            .lineLimit(1)
+                        Text(status.parseMotd(skipColor: true, trimWhitespace: true))
                             .font(.caption)
-                            .fontDesign(.monospaced)
+                            .lineLimit(1)
                             .foregroundStyle(.secondary)
                     case .error(_):
                         HStack(spacing: 4) {

@@ -68,8 +68,7 @@ struct ServerDetailView: View {
             switch server.serverState {
             case .success(let status):
                 VStack(alignment: .leading) {
-                    Text(status.motd.isEmpty ? "No MOTD available" : status.motd)
-                        .fontDesign(.monospaced)
+                    Text(status.motd.isEmpty ? "No MOTD available" : status.parseMotd())
                         .padding(.vertical)
 
                     LabeledContent(
