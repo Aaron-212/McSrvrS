@@ -30,7 +30,7 @@ struct ServerDetailView: View {
             #if os(macOS)
                 ToolbarItem {
                     Button(action: refreshServer) {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
                     }
                 }
                 ToolbarItem {

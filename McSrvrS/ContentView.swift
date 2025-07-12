@@ -49,7 +49,7 @@ struct ContentView: View {
                 #elseif os(macOS)
                     ToolbarItem(placement: .automatic) {
                         Button(action: refreshAllServers) {
-                            Label("Refresh All", systemImage: "arrow.clockwise")
+                            Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
                         }
                     }
                     ToolbarItem(placement: .automatic) {
