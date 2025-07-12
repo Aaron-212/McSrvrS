@@ -6,15 +6,12 @@ struct ServerDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 24) {
                 // Header Section
                 headerSection
 
-                // Status Section
-                statusSection
-
-                // Server Information Section
-                serverInfoSection
+                // Server Status Section
+                serverStatusSection
 
                 // Players Section (if available)
                 if case .success(let status) = server.serverState {
@@ -27,24 +24,16 @@ struct ServerDetailView: View {
             .padding()
         }
         .toolbar {
-            #if os(macOS)
-                ToolbarItem {
-                    Button(action: refreshServer) {
-                        Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
-                    }
+            ToolbarItem {
+                Button(action: refreshServer) {
+                    Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
                 }
-                ToolbarItem {
-                    Button(action: { showingEditForm = true }) {
-                        Label("Edit", systemImage: "pencil")
-                    }
+            }
+            ToolbarItem {
+                Button(action: { showingEditForm = true }) {
+                    Label("Edit", systemImage: "pencil")
                 }
-            #elseif os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingEditForm = true }) {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                }
-            #endif
+            }
         }
         .refreshable {
             refreshServer()
@@ -56,102 +45,48 @@ struct ServerDetailView: View {
 
     private var headerSection: some View {
         HStack(spacing: 16) {
-            // Server Icon
             server.faviconView
-                .frame(width: 100, height: 100)
+                .frame(width: 96, height: 96)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(radius: 4)
 
             VStack(alignment: .leading) {
                 Text(server.name)
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .bold()
 
                 Text(server.addressDescription)
                     .font(.subheadline)
                     .fontDesign(.monospaced)
                     .foregroundColor(.secondary)
                     .textSelection(.enabled)
-
-                // Status Indicator
-                HStack {
-                    Circle()
-                        .fill(statusColor)
-                        .frame(width: 12, height: 12)
-                    Text(statusText)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                }
             }
-
-            Spacer()
         }
     }
 
-    private var statusSection: some View {
-        GroupBox {
+    private var serverStatusSection: some View {
+        GroupBox(label: Label("Server Status", systemImage: "server.rack")) {
             switch server.serverState {
             case .success(let status):
-                VStack(alignment: .leading, spacing: 12) {
-                    // Connection Stats
-                    HStack {
-                        Label {
-                            Text(status.latencyDescription)
-                        } icon: {
-                            Image(systemName: "cellularbars", variableValue: status.latencyVariableColor)
-                                .foregroundColor(.primary)
-                        }
+                VStack(alignment: .leading) {
+                    Text(status.motd.isEmpty ? "No MOTD available" : status.motd)
+                        .fontDesign(.monospaced)
+                        .padding(.vertical)
 
-                        Spacer()
-
-                        Label {
-                            Text(status.playersDescription)
-                        } icon: {
-                            Image(systemName: "person.2.fill")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .font(.callout)
-
-                    Divider()
-
-                    // MOTD
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Message of the Day")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .textCase(.uppercase)
-
-                        Text(status.motd.isEmpty ? "No MOTD available" : status.motd)
-                            .font(.body)
-                            .fontDesign(.monospaced)
-                            .lineLimit(nil)
-                    }
-
-                    Divider()
-
-                    // Version Info
-                    HStack {
-                        Text("Version")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Spacer()
-
-                        Text(status.version.name)
-                            .font(.callout)
-                            .fontWeight(.medium)
-                    }
+                    LabeledContent(
+                        "Latency",
+                        value: status.latencyDescription
+                    )
+                    LabeledContent(
+                        "Version",
+                        value: status.version.name
+                    )
                 }
 
             case .error(let errorMessage):
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                        Text("Connection Failed")
-                            .font(.headline)
-                    }
+                VStack(alignment: .leading) {
+                    Label("Connection Failed", systemImage: "exclamationmark.triangle.fill")
+                        .font(.headline)
+                        .foregroundColor(.red)
 
                     Text(errorMessage)
                         .font(.body)
@@ -159,180 +94,135 @@ struct ServerDetailView: View {
                 }
 
             case .loading:
-                HStack {
-                    ProgressView()
-                        .scaleEffect(0.8)
+                VStack(alignment: .leading) {
                     Text("Checking server status...")
                         .font(.body)
                         .foregroundColor(.secondary)
+                    ProgressView()
+                        .progressViewStyle(.linear)
+
                 }
             }
-        } label: {
-            Text("Server Status")
-                .font(.headline)
         }
     }
 
-    private var serverInfoSection: some View {
-        GroupBox {
-            VStack(spacing: 12) {
-                InfoRow(label: "Host", value: server.host)
-                InfoRow(label: "Port", value: String(server.port))
-                InfoRow(
-                    label: "Last Updated",
+    private var connectionHistorySection: some View {
+        GroupBox(label: Label("Connection History", systemImage: "clock.arrow.circlepath")) {
+            VStack {
+                if let lastSeenDate = server.lastSeenDate {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 12, height: 12)
+                                .shadow(color: Color.green.opacity(0.3), radius: 2, x: 0, y: 1)
+
+                            Text("Connected")
+                                .font(.callout)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.green)
+
+                            Spacer()
+                        }
+
+                        Text("Last successful connection: \(lastSeenDate, style: .relative) ago")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Circle()
+                                .fill(Color.orange)
+                                .frame(width: 12, height: 12)
+                                .shadow(color: Color.orange.opacity(0.3), radius: 2, x: 0, y: 1)
+
+                            Text("Never Connected")
+                                .font(.callout)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.orange)
+
+                            Spacer()
+                        }
+
+                        Text("This server has never been successfully reached")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Divider()
+                
+                LabeledContent(
+                    "Last Updated",
                     value: server.lastUpdatedDate.formatted(date: .abbreviated, time: .shortened)
                 )
-
                 if let lastSeenDate = server.lastSeenDate {
-                    InfoRow(
-                        label: "Last Seen Online",
+                    LabeledContent(
+                        "Last Seen Online",
                         value: lastSeenDate.formatted(date: .abbreviated, time: .shortened)
                     )
+                } else {
+                    LabeledContent("Last Seen Online", value: "Never")
                 }
             }
-        } label: {
-            Text("Server Information")
-                .font(.headline)
         }
     }
 
     @ViewBuilder
     private func playersSection(status: Server.Status) -> some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 12) {
+        GroupBox(
+            label:
                 HStack {
-                    Text("Players Online")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
+                    Label("Players", systemImage: "person.2.fill")
                     Spacer()
-
                     Text("\(status.players.online) / \(status.players.max)")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
                 }
-
-                if let playerSample = status.players.sample, !playerSample.isEmpty {
-                    Divider()
-
-                    LazyVStack {
-                        ForEach(playerSample, id: \.id) { player in
-                            HStack {
-                                AsyncImage(url: player.avatarUrl) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 32, height: 32)
-                                    case .failure:
-                                        Image("Steve")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 32, height: 32)
-                                    default:
-                                        ProgressView()
-                                            .frame(width: 32, height: 32)
-                                    }
+        ) {
+            if let playerSample = status.players.sample, !playerSample.isEmpty {
+                Divider()
+                LazyVStack(alignment: .leading) {
+                    ForEach(playerSample, id: \.id) { player in
+                        HStack {
+                            AsyncImage(url: player.avatarUrl) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 32, height: 32)
+                                case .failure:
+                                    Image("Steve")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 32, height: 32)
+                                default:
+                                    ProgressView()
+                                        .frame(width: 32, height: 32)
                                 }
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-
-                                Text(player.name)
-                                    .font(.callout)
-
-                                Spacer()
                             }
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+                            Text(player.name)
+                                .font(.callout)
+                                .fontWeight(.medium)
                         }
                     }
-
-                    if status.players.online > status.players.sample?.count ?? 0 {
-                        Text("and \(status.players.online - UInt32(playerSample.count)) more...")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .italic()
-                    }
-                } else if status.players.online > 0 {
-                    Text("Player list not available")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .italic()
-                } else {
-                    Text("No players currently online")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .italic()
                 }
-            }
-        } label: {
-            Text("Players")
-                .font(.headline)
-        }
-    }
 
-    private var connectionHistorySection: some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 8) {
-                if let lastSeenDate = server.lastSeenDate {
-                    HStack {
-                        Text("Connection Status")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Spacer()
-
-                        Text("Connected")
-                            .foregroundColor(.green)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-
-                    Text("Last successful connection: \(lastSeenDate, style: .relative) ago")
-                        .font(.caption)
+                if status.players.online > status.players.sample?.count ?? 0 {
+                    Text("and \(status.players.online - UInt32(playerSample.count)) more...")
                         .foregroundColor(.secondary)
-                } else {
-                    HStack {
-                        Text("Connection Status")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Spacer()
-
-                        Text("Never Connected")
-                            .foregroundColor(.orange)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-
-                    Text("This server has never been successfully reached")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .padding(.top, 4)
                 }
-            }
-        } label: {
-            Text("Connection History")
-                .font(.headline)
-        }
-    }
-
-    // MARK: - Helper Views
-
-    private struct InfoRow: View {
-        let label: String
-        let value: String
-
-        var body: some View {
-            HStack {
-                Text(label)
-                    .font(.callout)
+            } else if status.players.online > 0 {
+                Text("Player list not available")
                     .foregroundColor(.secondary)
-
-                Spacer()
-
-                Text(value)
-                    .font(.callout)
-                    .fontWeight(.medium)
-                    .textSelection(.enabled)
+                    .padding(16)
+            } else {
+                Text("No players currently online")
+                    .foregroundColor(.secondary)
+                    .padding(16)
             }
         }
     }
