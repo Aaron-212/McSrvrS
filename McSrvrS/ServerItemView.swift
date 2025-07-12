@@ -33,6 +33,7 @@ struct ServerItemView: View {
                                 Text(status.playersDescription)
                             }
                         }
+                        .lineLimit(1)
                         .font(.callout)
                         Text(status.parseMotd(skipColor: true, trimWhitespace: true))
                             .font(.caption)
