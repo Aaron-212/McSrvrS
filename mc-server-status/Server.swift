@@ -33,6 +33,10 @@ final class Server {
     struct Player: Codable {
         let name: String
         let id: String
+
+        var avatarUrl: URL? {
+            return URL(string: "https://mc-heads.net/avatar/\(self.id)")
+        }
     }
 
     struct Players: Codable {

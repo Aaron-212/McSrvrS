@@ -29,17 +29,23 @@ struct ServerDetailView: View {
         }
         .toolbar {
             #if os(macOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem {
                     Button(action: refreshServer) {
                         Label("Refresh", systemImage: "arrow.clockwise")
                     }
                 }
-            #endif
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showingEditForm = true }) {
-                    Label("Edit", systemImage: "pencil")
+                ToolbarItem {
+                    Button(action: { showingEditForm = true }) {
+                        Label("Edit", systemImage: "pencil")
+                    }
                 }
-            }
+            #elseif os(iOS)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingEditForm = true }) {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                }
+            #endif
         }
         .refreshable {
             refreshServer()
@@ -71,13 +77,14 @@ struct ServerDetailView: View {
             }
             .shadow(radius: 4)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading) {
                 Text(server.name)
                     .font(.title2)
                     .fontWeight(.bold)
 
                 Text("\(server.host):\(server.port)")
                     .font(.subheadline)
+                    .fontDesign(.monospaced)
                     .foregroundColor(.secondary)
                     .textSelection(.enabled)
 
@@ -224,17 +231,27 @@ struct ServerDetailView: View {
                 if let playerSample = status.players.sample, !playerSample.isEmpty {
                     Divider()
 
-                    Text("Online Players")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .textCase(.uppercase)
-
-                    LazyVStack(alignment: .leading, spacing: 6) {
+                    List {
                         ForEach(playerSample, id: \.id) { player in
                             HStack {
-                                Image(systemName: "person.circle.fill")
-                                    .foregroundColor(.blue)
-                                    .font(.caption)
+                                AsyncImage(url: player.avatarUrl) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 32, height: 32)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    case .failure:
+                                        Image("Steve")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 32, height: 32)
+                                    default:
+                                        ProgressView()
+                                            .frame(width: 32, height: 32)
+                                    }
+                                }
 
                                 Text(player.name)
                                     .font(.callout)
