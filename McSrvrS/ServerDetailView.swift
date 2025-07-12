@@ -216,7 +216,7 @@ struct ServerDetailView: View {
                 if let playerSample = status.players.sample, !playerSample.isEmpty {
                     Divider()
 
-                    List {
+                    LazyVStack {
                         ForEach(playerSample, id: \.id) { player in
                             HStack {
                                 AsyncImage(url: player.avatarUrl) { phase in
@@ -226,7 +226,6 @@ struct ServerDetailView: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 32, height: 32)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
                                     case .failure:
                                         Image("Steve")
                                             .resizable()
@@ -237,6 +236,7 @@ struct ServerDetailView: View {
                                             .frame(width: 32, height: 32)
                                     }
                                 }
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
 
                                 Text(player.name)
                                     .font(.callout)
