@@ -83,16 +83,11 @@ struct ServerDetailView: View {
                     )
                 }
 
-            case .error(let errorMessage):
-                VStack(alignment: .leading) {
-                    Label("Connection Failed", systemImage: "exclamationmark.triangle.fill")
-                        .font(.headline)
-                        .foregroundColor(.red)
-
-                    Text(errorMessage)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
+            case .error(_):
+                Label("Connection Failed", systemImage: "exclamationmark.triangle.fill")
+                    .font(.headline)
+                    .foregroundColor(.red)
+                    .padding()
 
             case .loading:
                 VStack(alignment: .leading) {

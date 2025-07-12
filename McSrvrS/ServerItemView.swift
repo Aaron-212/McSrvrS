@@ -35,10 +35,17 @@ struct ServerItemView: View {
                         }
                         .lineLimit(1)
                         .font(.callout)
-                        Text(status.parseMotd(skipColor: true, trimWhitespace: true))
-                            .font(.caption)
-                            .lineLimit(1)
-                            .foregroundStyle(.secondary)
+                        if !status.motd.isEmpty {
+                            Text(status.parseMotd(skipColor: true, trimWhitespace: true))
+                                .font(.caption)
+                                .lineLimit(1)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("No MOTD available")
+                                .font(.caption)
+                                .lineLimit(1)
+                                .foregroundStyle(.secondary)
+                        }
                     case .error(_):
                         HStack(spacing: 4) {
                             Image(systemName: "xmark.circle.fill")
