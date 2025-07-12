@@ -6,16 +6,40 @@ struct ContentView: View {
     @Query private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
-    @State private var isFilteringServer = false
     @State private var showingServerFilter = false
-    
+    @State private var filterMode: FilterMode = .all
+
+    enum FilterMode: String, CaseIterable {
+        case all = "All Servers"
+        case online = "Online Only"
+        case offline = "Offline Only"
+    }
+
     private var filteredServers: [Server] {
-        if searchText.isEmpty {
-            return servers
-        } else {
-            return servers.filter { server in
-                server.name.localizedCaseInsensitiveContains(searchText) ||
-                server.addressDescription.localizedCaseInsensitiveContains(searchText)
+        let searchFiltered =
+            searchText.isEmpty
+            ? servers
+            : servers.filter { server in
+                server.name.localizedCaseInsensitiveContains(searchText)
+                    || server.addressDescription.localizedCaseInsensitiveContains(searchText)
+            }
+
+        switch filterMode {
+        case .all:
+            return searchFiltered
+        case .online:
+            return searchFiltered.filter { server in
+                if case .success = server.serverState {
+                    return true
+                }
+                return false
+            }
+        case .offline:
+            return searchFiltered.filter { server in
+                if case .error = server.serverState {
+                    return true
+                }
+                return false
             }
         }
     }
@@ -57,21 +81,28 @@ struct ContentView: View {
                     }
                     ToolbarSpacer(.fixed, placement: .bottomBar)
                     DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                    ToolbarSpacer(.fixed, placement: .bottomBar)
+                    ToolbarItem(placement: .bottomBar) {
+                        Button(action: addServer) {
+                            Label("Add Server", systemImage: "plus")
+                        }
+                    }
                 #elseif os(macOS)
                     ToolbarItem(placement: .automatic) {
                         Button(action: refreshAllServers) {
                             Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
                         }
                     }
+
                     ToolbarItem(placement: .automatic) {
                         filterContextMenu
                     }
-                #endif
-                ToolbarItem(placement: .automatic) {
-                    Button(action: addServer) {
-                        Label("Add Server", systemImage: "plus")
+                    ToolbarItem(placement: .automatic) {
+                        Button(action: addServer) {
+                            Label("Add Server", systemImage: "plus")
+                        }
                     }
-                }
+                #endif
             }
             .refreshable {
                 refreshAllServers()
@@ -85,24 +116,42 @@ struct ContentView: View {
         .searchable(text: $searchText, prompt: "Search Servers")
         .sheet(isPresented: $showingServerForm) {
             ServerForm()
+                .presentationDetents([.medium, .large])
         }
         .onAppear {
             refreshAllServers()
         }
     }
 
-    private var filterContextMenu: Menu = Menu {
-        Text("hello")
-    } label: {
-        Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
+    private var filterContextMenu: some View {
+        Menu {
+            ForEach(FilterMode.allCases, id: \.self) { mode in
+                Button(action: {
+                    filterMode = mode
+                }) {
+                    HStack {
+                        Text(mode.rawValue)
+                        if filterMode == mode {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            Group {
+                if filterMode == .all {
+                    Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
+                } else {
+                    Label("Filter Servers", systemImage: "line.3.horizontal.decrease.circle.fill")
+                        .buttonStyle(.borderedProminent)
+                }
+            }
+        }
+        .menuStyle(.button)
     }
 
     private func addServer() {
         showingServerForm = true
-    }
-
-    private func serverFilter() {
-        isFilteringServer = true
     }
 
     private func deleteServers(offsets: IndexSet) {
