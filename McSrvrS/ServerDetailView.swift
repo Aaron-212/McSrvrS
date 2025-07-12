@@ -55,7 +55,7 @@ struct ServerDetailView: View {
     }
 
     private var headerSection: some View {
-        HStack {
+        HStack(spacing: 16) {
             // Server Icon
             server.faviconView
                 .frame(width: 100, height: 100)

@@ -24,11 +24,11 @@ struct ServerItemView: View {
                     switch server.serverState {
                     case .success(let status):
                         HStack {
-                            Group {
+                            HStack(spacing: 4) {
                                 Image(systemName: "cellularbars", variableValue: status.latencyVariableColor)
                                 Text(status.latencyDescription)
                             }
-                            Group {
+                            HStack(spacing: 4) {
                                 Image(systemName: "person.2.fill")
                                 Text(status.playersDescription)
                             }
@@ -36,11 +36,11 @@ struct ServerItemView: View {
                         .font(.callout)
                         Text(status.motd)
                             .lineLimit(1)
-                            .font(.footnote)
+                            .font(.caption)
                             .fontDesign(.monospaced)
                             .foregroundStyle(.secondary)
                     case .error(_):
-                        Group {
+                        HStack(spacing: 4) {
                             Image(systemName: "xmark.circle.fill")
                             Text("Unable to fetch server status")
                         }
@@ -52,7 +52,7 @@ struct ServerItemView: View {
                                 Text("Never seen")
                             }
                         }
-                        .font(.footnote)
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                     case .loading:
                         ProgressView()
