@@ -67,7 +67,7 @@ struct ServerDetailView: View {
                     .font(.title2)
                     .fontWeight(.bold)
 
-                Text("\(server.host):\(server.port)")
+                Text(server.addressDescription)
                     .font(.subheadline)
                     .fontDesign(.monospaced)
                     .foregroundColor(.secondary)

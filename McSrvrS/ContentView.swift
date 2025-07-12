@@ -26,12 +26,13 @@ struct ContentView: View {
                         } label: {
                             Label("Refresh", systemImage: "arrow.clockwise")
                         }
+                        .tint(.accentColor)
                     }
                 }
                 .onDelete(perform: deleteServers)
             }
             .listStyle(.plain)
-            .navigationTitle("MC Server Status")
+            .navigationTitle("McSrvrS")
             #if os(macOS)
                 .navigationSplitViewColumnWidth(min: 250, ideal: 320)
             #endif

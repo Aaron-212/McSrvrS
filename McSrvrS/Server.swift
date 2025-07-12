@@ -158,6 +158,15 @@ final class Server {
         }
     }
 
+    var addressDescription: String {
+        if self.host.contains(":") {
+            // probably an IPv6 address
+            return "[\(self.host)]:\(self.port)"
+        } else {
+            return "\(self.host):\(self.port)"
+        }
+    }
+
     // MARK: - Server Status Updates
 
     @MainActor
