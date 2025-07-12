@@ -9,8 +9,8 @@ struct ServerForm: View {
     @State private var host: String = ""
     @State private var port: UInt16? = 25565
     
-    // Add ServerPinger instance
-    private let serverPinger = ServerPinger()
+    // Add JavaServerPinger instance
+private let serverPinger = JavaServerPinger.shared
     
     // Optional server for editing
     let serverToEdit: Server?

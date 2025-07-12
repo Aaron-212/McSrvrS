@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ServerDetailView: View {
     let server: Server
-    @State private var pinger = ServerPinger()
+    @State private var pinger = JavaServerPinger.shared
     @State private var showingEditForm = false
 
     var body: some View {

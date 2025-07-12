@@ -7,7 +7,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingServerForm = false
     @State private var showingServerFilter = false
-    @State private var pinger = ServerPinger()
+    @State private var pinger = JavaServerPinger.shared
 
     var body: some View {
         NavigationSplitView {

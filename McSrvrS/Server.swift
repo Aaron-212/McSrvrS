@@ -161,7 +161,7 @@ final class Server {
     // MARK: - Server Status Updates
 
     @MainActor
-    func updateStatus(using pinger: ServerPinger) async {
+    func updateStatus(using pinger: JavaServerPinger) async {
         self.serverState = .loading
 
         let pingResult = await pinger.ping(host: self.host, port: self.port)

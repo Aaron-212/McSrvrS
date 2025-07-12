@@ -2,7 +2,11 @@ import Foundation
 import Network
 
 // A dedicated service for handling Minecraft Server List Ping
-actor ServerPinger {
+actor JavaServerPinger {
+    static let shared = JavaServerPinger()
+    
+    private init() {}
+    
     enum PingerError: Error {
         case connectionFailed(Error)
         case timedOut
