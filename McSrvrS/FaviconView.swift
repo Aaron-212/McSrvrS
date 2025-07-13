@@ -1,13 +1,14 @@
 import SwiftUI
+
 #if os(iOS)
-import UIKit
+    import UIKit
 #elseif os(macOS)
-import AppKit
+    import AppKit
 #endif
 
 struct FaviconView: View {
     let serverState: Server.ServerState
-    
+
     var body: some View {
         switch serverState {
         case .success(let status):
@@ -25,24 +26,24 @@ struct FaviconView: View {
                 .aspectRatio(contentMode: .fill)
         }
     }
-    
+
     private func decodeBase64PNG(from favicon: String?) -> Image? {
         guard let favicon = favicon else { return nil }
 
         let cleaned = favicon.components(separatedBy: ",").last ?? favicon
 
-        #if os(iOS)
-        guard let data = Data(base64Encoded: cleaned),
-            let uiImage = UIImage(data: data)
-        else { return nil }
-
-        return Image(uiImage: uiImage)
-        #elseif os(macOS)
-        guard let data = Data(base64Encoded: cleaned),
+        #if os(macOS)
+            guard let data = Data(base64Encoded: cleaned),
                 let nsImage = NSImage(data: data)
-        else { return nil }
+            else { return nil }
 
-        return Image(nsImage: nsImage)
+            return Image(nsImage: nsImage)
+        #else
+            guard let data = Data(base64Encoded: cleaned),
+                let uiImage = UIImage(data: data)
+            else { return nil }
+
+            return Image(uiImage: uiImage)
         #endif
     }
 }

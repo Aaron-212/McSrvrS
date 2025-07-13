@@ -28,30 +28,32 @@ struct ServerForm: View {
                     header: Text("Server Details"),
                     footer: Text("Default port for Minecraft servers is 25565")
                 ) {
+                    #if os(macOS)
+                    TextField("Server Name", text: $name, prompt: Text("Example Server"))
+                    
+                    TextField("Host", text: $host, prompt: Text("example.net"))
+
+                    TextField("Port", value: $port, formatter: NumberFormatter(), prompt: Text("25565"))
+                    #else
                     LabeledContent("Server Name") {
                         TextField("Example Server", text: $name)
-                            #if os(iOS)
-                                .multilineTextAlignment(.trailing)
-                            #endif
+                            .multilineTextAlignment(.trailing)
                     }
 
                     LabeledContent("Host") {
                         TextField("example.net", text: $host)
-                            #if os(iOS)
-                                .autocapitalization(.none)
-                                .autocorrectionDisabled()
-                                .keyboardType(.URL)
-                                .multilineTextAlignment(.trailing)
-                            #endif
+                            .autocapitalization(.none)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                            .multilineTextAlignment(.trailing)
                     }
 
                     LabeledContent("Port") {
                         TextField("25565", value: $port, formatter: NumberFormatter())
-                            #if os(iOS)
-                                .keyboardType(.numberPad)
-                                .multilineTextAlignment(.trailing)
-                            #endif
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
                     }
+                    #endif
                 }
             }
             .navigationTitle(isEditing ? "Edit Server" : "Add Server")

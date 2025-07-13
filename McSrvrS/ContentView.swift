@@ -112,6 +112,9 @@ struct ContentView: View {
                 .font(.title)
                 .foregroundStyle(.tertiary)
                 .bold()
+            #if os(macOS)
+                .navigationSplitViewColumnWidth(min: 320, ideal: 400)
+            #endif
         }
         .searchable(text: $searchText, prompt: "Search Servers")
         .sheet(isPresented: $showingServerForm) {
