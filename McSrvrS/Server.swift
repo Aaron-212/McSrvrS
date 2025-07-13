@@ -100,7 +100,7 @@ final class Server {
         }
 
         public var playersDescription: String {
-            return "\(players.online) / \(players.max)"
+            return "\(players.online.formatted(.number)) / \(players.max.formatted(.number))"
         }
     }
 

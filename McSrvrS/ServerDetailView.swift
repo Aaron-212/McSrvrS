@@ -25,6 +25,13 @@ struct ServerDetailView: View {
             .padding(.vertical, 16)
         }
         .toolbar {
+            #if os(macOS)
+            ToolbarItem {
+                Button(action: refreshServer) {
+                    Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
+                }
+            }
+            #endif
             ToolbarItem {
                 Button(action: { showingEditForm = true }) {
                     Label("Edit", systemImage: "pencil")
@@ -288,7 +295,7 @@ struct ServerDetailView: View {
 
                 Spacer()
 
-                Text("\(status.players.online) / \(status.players.max)")
+                Text(status.playersDescription)
                     .font(.callout)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
