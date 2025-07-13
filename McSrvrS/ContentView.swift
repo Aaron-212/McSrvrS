@@ -10,10 +10,10 @@ struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: hasServers ? "magnifyingglass" : "server.rack")
-                .font(.system(size: hasServers ? 50 : 60))
+                .font(.largeTitle)
                 .foregroundStyle(.tertiary)
             
-            VStack(spacing: 8) {
+            VStack {
                 Text(titleText)
                     .font(.title2)
                     .fontWeight(.semibold)
