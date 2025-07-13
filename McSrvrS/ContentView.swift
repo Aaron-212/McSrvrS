@@ -6,14 +6,7 @@ struct ContentView: View {
     @Query private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
-    @State private var showingServerFilter = false
-    @State private var filterMode: FilterMode = .all
-
-    enum FilterMode: String, CaseIterable {
-        case all = "All Servers"
-        case online = "Online Only"
-        case offline = "Offline Only"
-    }
+    @State private var isFiltering = false
 
     private var filteredServers: [Server] {
         let searchFiltered =
@@ -24,19 +17,11 @@ struct ContentView: View {
                     || server.addressDescription.localizedCaseInsensitiveContains(searchText)
             }
 
-        switch filterMode {
-        case .all:
+        if !isFiltering {
             return searchFiltered
-        case .online:
+        } else {
             return searchFiltered.filter { server in
                 if case .success = server.serverState {
-                    return true
-                }
-                return false
-            }
-        case .offline:
-            return searchFiltered.filter { server in
-                if case .error = server.serverState {
                     return true
                 }
                 return false
@@ -76,16 +61,14 @@ struct ContentView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         EditButton()
                     }
-                    ToolbarItem(placement: .bottomBar) {
-                        filterContextMenu
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        filterServerButton
                     }
                     ToolbarSpacer(.fixed, placement: .bottomBar)
                     DefaultToolbarItem(kind: .search, placement: .bottomBar)
                     ToolbarSpacer(.fixed, placement: .bottomBar)
                     ToolbarItem(placement: .bottomBar) {
-                        Button(action: addServer) {
-                            Label("Add Server", systemImage: "plus")
-                        }
+                        addServerButton
                     }
                 #elseif os(macOS)
                     ToolbarItem(placement: .automatic) {
@@ -95,12 +78,10 @@ struct ContentView: View {
                     }
 
                     ToolbarItem(placement: .automatic) {
-                        filterContextMenu
+                        filterServerButton
                     }
                     ToolbarItem(placement: .automatic) {
-                        Button(action: addServer) {
-                            Label("Add Server", systemImage: "plus")
-                        }
+                        addServerButton
                     }
                 #endif
             }
@@ -112,9 +93,9 @@ struct ContentView: View {
                 .font(.title)
                 .foregroundStyle(.tertiary)
                 .bold()
-            #if os(macOS)
-                .navigationSplitViewColumnWidth(min: 320, ideal: 400)
-            #endif
+                #if os(macOS)
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 400)
+                #endif
         }
         .searchable(text: $searchText, prompt: "Search Servers")
         .sheet(isPresented: $showingServerForm) {
@@ -126,31 +107,16 @@ struct ContentView: View {
         }
     }
 
-    private var filterContextMenu: some View {
-        Menu {
-            ForEach(FilterMode.allCases, id: \.self) { mode in
-                Button(action: {
-                    filterMode = mode
-                }) {
-                    HStack {
-                        Text(mode.rawValue)
-                        if filterMode == mode {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
-            }
-        } label: {
-            Group {
-                if filterMode == .all {
-                    Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
-                } else {
-                    Label("Filter Servers", systemImage: "line.3.horizontal.decrease.circle.fill")
-                        .buttonStyle(.borderedProminent)
-                }
-            }
+    private var filterServerButton: some View {
+        Toggle(isOn: $isFiltering) {
+            Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
         }
-        .menuStyle(.button)
+    }
+
+    private var addServerButton: some View {
+        Button(action: addServer) {
+            Label("Add Server", systemImage: "plus")
+        }
     }
 
     private func addServer() {
