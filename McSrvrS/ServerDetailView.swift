@@ -1,4 +1,5 @@
 import SwiftUI
+import CachedAsyncImage
 
 struct ServerDetailView: View {
     let server: Server
@@ -309,7 +310,7 @@ struct ServerDetailView: View {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
                             HStack(spacing: 12) {
-                                AsyncImage(url: player.avatarUrl) { phase in
+                                CachedAsyncImage(url: player.avatarUrl) { phase in
                                     switch phase {
                                     case .success(let image):
                                         image

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8DC552022E23F68800FC9242 /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 8DC552012E23F68800FC9242 /* CachedAsyncImage */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		8D5E8D412E20BCBF007603B3 /* McSrvrS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = McSrvrS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8DC552022E23F68800FC9242 /* CachedAsyncImage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = McSrvrS;
 			packageProductDependencies = (
+				8DC552012E23F68800FC9242 /* CachedAsyncImage */,
 			);
 			productName = "mc-server-status";
 			productReference = 8D5E8D412E20BCBF007603B3 /* McSrvrS.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 8D5E8D382E20BCBF007603B3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8D5E8D422E20BCBF007603B3 /* Products */;
 			projectDirPath = "";
@@ -381,6 +390,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lorenzofiamingo/swiftui-cached-async-image";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8DC552012E23F68800FC9242 /* CachedAsyncImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */;
+			productName = CachedAsyncImage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8D5E8D392E20BCBF007603B3 /* Project object */;
 }
