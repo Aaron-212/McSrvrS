@@ -36,7 +36,11 @@ final class Server {
         let playerId: String // Original UUID from server
 
         var avatarUrl: URL? {
-            return URL(string: "https://mc-heads.net/avatar/\(self.playerId)")
+            if self.playerId == "00000000-0000-0000-0000-000000000000" {
+                return nil // No avatar for anonymous players
+            } else {
+                return URL(string: "https://mc-heads.net/avatar/\(self.playerId)")
+            }
         }
         
         init(name: String, playerId: String) {

@@ -40,11 +40,6 @@ struct ServerItemView: View {
                                 .font(.caption)
                                 .lineLimit(1)
                                 .foregroundStyle(.secondary)
-                        } else {
-                            Text("No MOTD available")
-                                .font(.caption)
-                                .lineLimit(1)
-                                .foregroundStyle(.secondary)
                         }
                     case .error(_):
                         HStack(spacing: 4) {

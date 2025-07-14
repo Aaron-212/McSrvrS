@@ -14,6 +14,11 @@ extension Server.Status {
         var attributedString = AttributedString()
         var currentText = ""
         var currentAttributes = AttributeContainer()
+        
+        // Set default white color for text without color codes
+        if !skipColor {
+            currentAttributes.foregroundColor = .white
+        }
 
         let characters = Array(trimWhitespace ? motd.trimmingWhitespace() : motd)
         var i = 0
@@ -47,7 +52,7 @@ extension Server.Status {
             case "d": return Color(red: 1.0, green: 0.33, blue: 1.0) // Light Purple
             case "e": return Color(red: 1.0, green: 1.0, blue: 0.33) // Yellow
             case "f": return .white
-            default: return nil
+            default: return .white
             }
         }
 
@@ -88,6 +93,10 @@ extension Server.Status {
                 case "r":
                     // Reset all formatting
                     currentAttributes = AttributeContainer()
+                    // Set default white color after reset
+                    if !skipColor {
+                        currentAttributes.foregroundColor = .white
+                    }
 
                 case "k":
                     // Obfuscated - skip for now as requested

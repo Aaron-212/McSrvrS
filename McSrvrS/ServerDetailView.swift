@@ -310,24 +310,30 @@ struct ServerDetailView: View {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
                             HStack(spacing: 12) {
-                                CachedAsyncImage(url: player.avatarUrl) { phase in
-                                    switch phase {
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 32, height: 32)
-                                    case .failure:
+                                Group {
+                                    if let avatarUrl = player.avatarUrl {
+                                        CachedAsyncImage(url: avatarUrl) { phase in
+                                            switch phase {
+                                            case .success(let image):
+                                                image
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 32, height: 32)
+                                            default:
+                                                Image("Steve")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fit)
+                                                    .frame(width: 32, height: 32)
+                                            }
+                                        }
+                                    } else {
                                         Image("Steve")
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
                                             .frame(width: 32, height: 32)
-                                    default:
-                                        ProgressView()
-                                            .frame(width: 32, height: 32)
                                     }
                                 }
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
                                 .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
 
                                 Text(player.name)
