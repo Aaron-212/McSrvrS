@@ -77,8 +77,8 @@ final class Server {
 
     struct Status: Codable {
         let version: Version
-        let players: Players
-        let motd: String
+        let players: Players?
+        let motd: String?
         let favicon: String?
         let latency: UInt64?
 
@@ -104,8 +104,8 @@ final class Server {
 
     private struct StatusDto: Codable {
         let version: Version
-        let players: Players
-        let motd: String
+        let players: Players?
+        let motd: String?
         let favicon: String?
 
         enum CodingKeys: String, CodingKey {
@@ -128,7 +128,7 @@ final class Server {
             {
                 motd = text
             } else {
-                motd = ""
+                motd = nil
             }
         }
 
@@ -204,7 +204,7 @@ final class Server {
             switch parseResult {
             case .success(let dto):
                 let status = dto.toStatus(latency: UInt64(latency))
-                log.info("Parsed server status: \(status.players.online)/\(status.players.max) players online")
+                log.info("Parsed server status")
                 self.serverState = .success(status)
                 self.lastSeenDate = .now
             case .failure(let error):

@@ -22,7 +22,7 @@ struct FaviconView: View {
         }
     }
 
-    private func decodeBase64PNG(from favicon: String?) -> Image? {
+    func decodeBase64PNG(from favicon: String?) -> Image? {
         guard let favicon = favicon else { return nil }
 
         let cleaned = favicon.components(separatedBy: ",").last ?? favicon

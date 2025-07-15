@@ -14,9 +14,11 @@ struct ServerItemView: View {
                     Text(server.name)
                         .bold()
                     Spacer()
-                    Text(server.lastUpdatedDate, style: .relative)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    TimelineView(.periodic(from: server.lastUpdatedDate, by: 60)) { _ in
+                        Text(server.lastUpdatedDate.formatted(.relative(presentation: .named)))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .lineLimit(1)
 
@@ -27,20 +29,24 @@ struct ServerItemView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "cellularbars", variableValue: status.latencyVariableColor)
                                 if let latency = status.latency {
-                                    Text("\(latency) ms")
+                                    Text(verbatim: "\(latency) ms")
                                 } else {
                                     Text("N/A")
                                 }
                             }
                             HStack(spacing: 4) {
                                 Image(systemName: "person.2.fill")
-                                Text("\(status.players.online) / \(status.players.max)")
+                                if let players = status.players {
+                                    Text("\(players.online) / \(players.max)")
+                                } else {
+                                    Text(verbatim: "???")
+                                }
                             }
                         }
                         .lineLimit(1)
                         .font(.callout)
-                        if !status.motd.isEmpty {
-                            Text(status.parseMotd(skipColor: true, trimWhitespace: true))
+                        if let motd = status.parseMotd(skipColor: true, trimWhitespace: true) {
+                            Text(motd)
                                 .font(.caption)
                                 .lineLimit(1)
                                 .foregroundStyle(.secondary)

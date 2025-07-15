@@ -10,7 +10,9 @@ extension String {
 }
 
 extension Server.Status {
-    func parseMotd(skipColor: Bool = false, trimWhitespace: Bool = false) -> AttributedString {
+    func parseMotd(skipColor: Bool = false, trimWhitespace: Bool = false) -> AttributedString? {
+        guard let motd = self.motd else { return nil }
+
         var attributedString = AttributedString()
         var currentText = ""
         var currentAttributes = AttributeContainer()

@@ -1,5 +1,5 @@
-import SwiftUI
 import CachedAsyncImage
+import SwiftUI
 
 struct ServerDetailView: View {
     let server: Server
@@ -27,11 +27,11 @@ struct ServerDetailView: View {
         }
         .toolbar {
             #if os(macOS)
-            ToolbarItem {
-                Button(action: refreshServer) {
-                    Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
+                ToolbarItem {
+                    Button(action: refreshServer) {
+                        Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
+                    }
                 }
-            }
             #endif
             ToolbarItem {
                 Button(action: { showingEditForm = true }) {
@@ -63,7 +63,7 @@ struct ServerDetailView: View {
                 Text(server.addressDescription)
                     .font(.subheadline)
                     .fontDesign(.monospaced)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .textSelection(.enabled)
             }
         }
@@ -76,38 +76,32 @@ struct ServerDetailView: View {
             HStack {
                 Label("Server Status", systemImage: "server.rack")
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
-                // Status indicator
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(statusColor)
-                        .frame(width: 8, height: 8)
-
-                    Text(statusText)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(statusColor)
-                }
+                Label(connectionStatusTitle, systemImage: "circle.fill")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(connectionStatusColor)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+
+            Divider()
+                .padding(.vertical)
 
             // Content
             VStack(alignment: .leading, spacing: 12) {
                 switch server.serverState {
                 case .success(let status):
-                    if !status.motd.isEmpty {
+                    if let motd = status.parseMotd() {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Message of the Day")
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .textCase(.uppercase)
 
-                            Text(status.parseMotd())
+                            Text(motd)
                                 .font(.body)
                                 .textSelection(.enabled)
                                 .padding()
@@ -124,19 +118,19 @@ struct ServerDetailView: View {
                             Text("Latency")
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .textCase(.uppercase)
 
                             Group {
                                 if let latency = status.latency {
-                                    Text("\(latency) ms")
+                                    Text(verbatim: "\(latency) ms")
                                 } else {
                                     Text("N/A")
                                 }
                             }
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.primary)
                         }
 
                         Spacer()
@@ -145,13 +139,12 @@ struct ServerDetailView: View {
                             Text("Version")
                                 .font(.caption)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .textCase(.uppercase)
 
                             Text(status.version.name)
                                 .font(.title3)
                                 .fontWeight(.semibold)
-                                .foregroundColor(.primary)
                         }
                     }
 
@@ -159,15 +152,15 @@ struct ServerDetailView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.title2)
-                            .foregroundColor(.red)
+                            .foregroundStyle(statusColor)
 
                         Text("Connection Failed")
                             .font(.headline)
-                            .foregroundColor(.red)
+                            .foregroundStyle(statusColor)
 
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -179,16 +172,14 @@ struct ServerDetailView: View {
 
                         Text("Checking server status...")
                             .font(.callout)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                 }
             }
-            .padding(16)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+        .padding()
     }
 
     private var connectionHistorySection: some View {
@@ -197,79 +188,44 @@ struct ServerDetailView: View {
             HStack {
                 Label("Connection History", systemImage: "clock.arrow.circlepath")
                     .font(.headline)
-                    .foregroundColor(.primary)
 
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+
+            Divider()
+                .padding(.vertical)
 
             // Content
             VStack(spacing: 16) {
-                if let lastSeenDate = server.lastSeenDate {
-                    HStack(spacing: 12) {
-                        Circle()
-                            .fill(Color.green)
-                            .frame(width: 12, height: 12)
-                            .shadow(color: Color.green.opacity(0.3), radius: 2, x: 0, y: 1)
+                HStack {
+                    Label(connectionStatusTitle, systemImage: "circle.fill")
+                        .font(.callout)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(connectionStatusColor)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Connected")
-                                .font(.callout)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.green)
-
-                            Text("Last successful connection: \(lastSeenDate, style: .relative) ago")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-                    }
-                } else {
-                    HStack(spacing: 12) {
-                        Circle()
-                            .fill(Color.orange)
-                            .frame(width: 12, height: 12)
-                            .shadow(color: Color.orange.opacity(0.3), radius: 2, x: 0, y: 1)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Never Connected")
-                                .font(.callout)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.orange)
-
-                            Text("This server has never been successfully reached")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-                    }
+                    Spacer()
                 }
-
-                Divider()
 
                 VStack(spacing: 8) {
                     HStack {
                         Text("Last Updated")
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 
                         Spacer()
 
                         Text(server.lastUpdatedDate.formatted(date: .abbreviated, time: .shortened))
                             .font(.callout)
-                            .foregroundColor(.primary)
+                            .foregroundStyle(.primary)
                     }
 
                     HStack {
                         Text("Last Seen Online")
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .textCase(.uppercase)
 
                         Spacer()
@@ -277,19 +233,16 @@ struct ServerDetailView: View {
                         if let lastSeenDate = server.lastSeenDate {
                             Text(lastSeenDate.formatted(date: .abbreviated, time: .shortened))
                                 .font(.callout)
-                                .foregroundColor(.primary)
                         } else {
                             Text("Never")
                                 .font(.callout)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
             }
-            .padding(16)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+        .padding()
     }
 
     @ViewBuilder
@@ -299,21 +252,27 @@ struct ServerDetailView: View {
             HStack {
                 Label("Players", systemImage: "person.2.fill")
                     .font(.headline)
-                    .foregroundColor(.primary)
 
                 Spacer()
 
-                Text("\(status.players.online) / \(status.players.max)")
-                    .font(.callout)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
+                Group {
+                    if let players = status.players {
+                        Text("\(players.online) / \(players.max)")
+                    } else {
+                        Text(verbatim: "???")
+                    }
+                }
+                .font(.callout)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+
+            Divider()
+                .padding(.vertical)
 
             // Content
             VStack(spacing: 12) {
-                if let playerSample = status.players.sample, !playerSample.isEmpty {
+                if let players = status.players, let playerSample = players.sample, !playerSample.isEmpty {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
                             HStack(spacing: 12) {
@@ -346,47 +305,45 @@ struct ServerDetailView: View {
                                 Text(player.name)
                                     .font(.callout)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.primary)
+                                    .textSelection(.enabled)
 
                                 Spacer()
                             }
                         }
                     }
 
-                    if status.players.online > status.players.sample?.count ?? 0 {
-                        Text("and \(status.players.online - UInt32(playerSample.count)) more...")
+                    if players.online > players.sample?.count ?? 0 {
+                        Text("and \(players.online - UInt32(playerSample.count)) more...")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .padding(.top, 4)
                     }
-                } else if status.players.online > 0 {
+                } else if let players = status.players, players.online > 0 {
                     VStack(spacing: 8) {
                         Image(systemName: "person.2.slash")
                             .font(.title2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text("Player list not available")
                             .font(.callout)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 8)
                 } else {
                     VStack(spacing: 8) {
                         Image(systemName: "person.slash")
                             .font(.title2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text("No players currently online")
                             .font(.callout)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 8)
                 }
             }
-            .padding(16)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 2)
+        .padding()
     }
 
     // MARK: - Computed Properties
@@ -396,7 +353,8 @@ struct ServerDetailView: View {
         case .success:
             return .green
         case .error:
-            return .red
+            // Never connected: red, Previously connected but can't connect now: orange
+            return server.lastSeenDate == nil ? .red : .orange
         case .loading:
             return .orange
         }
@@ -408,6 +366,28 @@ struct ServerDetailView: View {
             return "Online"
         case .error:
             return "Offline"
+        case .loading:
+            return "Checking..."
+        }
+    }
+
+    private var connectionStatusColor: Color {
+        switch server.serverState {
+        case .success:
+            return .green
+        case .error:
+            return server.lastSeenDate == nil ? .red : .orange
+        case .loading:
+            return .accent
+        }
+    }
+
+    private var connectionStatusTitle: String {
+        switch server.serverState {
+        case .success:
+            return "Connected"
+        case .error:
+            return server.lastSeenDate == nil ? "Never Connected" : "Connection Lost"
         case .loading:
             return "Checking..."
         }
