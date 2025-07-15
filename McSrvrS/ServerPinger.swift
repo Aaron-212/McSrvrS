@@ -1,17 +1,34 @@
 import Foundation
 import Network
+import os
 
 // A dedicated service for handling Minecraft Server List Ping
 actor JavaServerPinger {
     static let shared = JavaServerPinger()
-    
-    private init() {}
+    let log : Logger
+
+    private init() {
+        self.log = Logger(subsystem: "personal.aaron212.mcsrv", category: "JavaServerPinger")
+    }
     
     enum PingerError: Error {
         case connectionFailed(Error)
         case timedOut
         case dataError(String)
         case encodingError
+
+        public var description: String {
+            switch self {
+            case .connectionFailed(let error):
+                return "Connection failed: \(error.localizedDescription)"
+            case .timedOut:
+                return "The ping operation timed out."
+            case .dataError(let details):
+                return "Data parsing error: \(details)"
+            case .encodingError:
+                return "Failed to encode data for ping operation."
+            }
+        }
     }
 
     // Main ping function that returns (JSON string, latency in ms)
@@ -60,15 +77,19 @@ actor JavaServerPinger {
     private func performPing(connection: NWConnection, host: String, port: UInt16) async throws -> (String, Int) {
         // Send handshake packet
         try await sendHandshake(connection: connection, host: host, port: port)
+        log.debug("Handshake sent to \(host):\(port)")
 
         // Send status request
         try await sendStatusRequest(connection: connection)
+        log.debug("Status request sent to \(host):\(port)")
 
         // Read status response
         let jsonString = try await readStatusResponse(connection: connection)
+        log.debug("Status response received from \(host):\(port)")
 
         // Send ping packet and measure latency
         let latency = try await sendPingAndMeasureLatency(connection: connection)
+        log.debug("Ping response received from \(host):\(port) with latency \(latency) ms")
 
         return (jsonString, latency)
     }

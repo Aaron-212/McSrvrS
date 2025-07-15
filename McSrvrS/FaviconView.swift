@@ -10,17 +10,12 @@ struct FaviconView: View {
     let serverState: Server.ServerState
 
     var body: some View {
-        switch serverState {
-        case .success(let status):
-            if let image = decodeBase64PNG(from: status.favicon) {
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } else {
-                Image(systemName: "globe")
-                    .foregroundColor(.secondary)
-            }
-        case .error, .loading:
+        if case .success(let status) = serverState,
+           let image = decodeBase64PNG(from: status.favicon) {
+            image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+        } else {
             Image("pack")
                 .resizable()
                 .aspectRatio(contentMode: .fill)

@@ -92,7 +92,8 @@ struct ServerDetailView: View {
                         .foregroundColor(statusColor)
                 }
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
 
             // Content
             VStack(alignment: .leading, spacing: 12) {
@@ -126,7 +127,13 @@ struct ServerDetailView: View {
                                 .foregroundColor(.secondary)
                                 .textCase(.uppercase)
 
-                            Text(status.latencyDescription)
+                            Group {
+                                if let latency = status.latency {
+                                    Text("\(latency) ms")
+                                } else {
+                                    Text("N/A")
+                                }
+                            }
                                 .font(.title3)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
@@ -148,7 +155,7 @@ struct ServerDetailView: View {
                         }
                     }
 
-                case .error(_):
+                case .error(let error):
                     VStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.title2)
@@ -158,7 +165,7 @@ struct ServerDetailView: View {
                             .font(.headline)
                             .foregroundColor(.red)
 
-                        Text("Unable to connect to the server")
+                        Text(error)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -296,7 +303,7 @@ struct ServerDetailView: View {
 
                 Spacer()
 
-                Text(status.playersDescription)
+                Text("\(status.players.online) / \(status.players.max)")
                     .font(.callout)
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)

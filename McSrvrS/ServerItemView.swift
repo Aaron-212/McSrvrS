@@ -26,11 +26,15 @@ struct ServerItemView: View {
                         HStack {
                             HStack(spacing: 4) {
                                 Image(systemName: "cellularbars", variableValue: status.latencyVariableColor)
-                                Text(status.latencyDescription)
+                                if let latency = status.latency {
+                                    Text("\(latency) ms")
+                                } else {
+                                    Text("N/A")
+                                }
                             }
                             HStack(spacing: 4) {
                                 Image(systemName: "person.2.fill")
-                                Text(status.playersDescription)
+                                Text("\(status.players.online) / \(status.players.max)")
                             }
                         }
                         .lineLimit(1)
@@ -46,7 +50,8 @@ struct ServerItemView: View {
                             Image(systemName: "xmark.circle.fill")
                             Text("Unable to fetch server status")
                         }
-                            .font(.callout)
+                        .lineLimit(1)
+                        .font(.callout)
                         Group {
                             if let lastSeenDate = server.lastSeenDate {
                                 Text("Last seen at \(lastSeenDate.formatted(date: .abbreviated, time: .shortened))")

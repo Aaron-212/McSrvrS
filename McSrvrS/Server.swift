@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import SwiftData
+import os
 
 @Model
 final class Server {
@@ -96,15 +97,6 @@ final class Server {
             default:
                 return 0.0
             }
-        }
-
-        public var latencyDescription: String {
-            guard let latency = latency else { return "Unknown Ping" }
-            return "\(latency) ms"
-        }
-
-        public var playersDescription: String {
-            return "\(players.online.formatted(.number)) / \(players.max.formatted(.number))"
         }
     }
 
@@ -206,22 +198,22 @@ final class Server {
 
         switch pingResult {
         case .success(let (json, latency)):
-            print("Ping successful: latency \(latency)ms")
+            log.info("Ping successful: latency \(latency)ms")
 
             let parseResult = StatusDto.parse(json)
             switch parseResult {
             case .success(let dto):
                 let status = dto.toStatus(latency: UInt64(latency))
-                print("Parsed server status: \(status.players.online)/\(status.players.max) players online")
+                log.info("Parsed server status: \(status.players.online)/\(status.players.max) players online")
                 self.serverState = .success(status)
                 self.lastSeenDate = .now
             case .failure(let error):
-                print("Failed to parse server status: \(error)")
-                self.serverState = .error("Failed to parse server response")
+                log.error("Failed to parse server status: \(error)")
+                self.serverState = .error(error.localizedDescription)
             }
         case .failure(let error):
             print("Ping failed: \(error)")
-            self.serverState = .error("Connection failed")
+            self.serverState = .error(error.description)
         }
 
         self.lastUpdatedDate = .now

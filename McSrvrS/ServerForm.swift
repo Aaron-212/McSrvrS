@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import os
 
 struct ServerForm: View {
     @Environment(\.modelContext) private var modelContext
@@ -130,7 +131,7 @@ struct ServerForm: View {
             dismiss()
         } catch {
             // Handle error - you might want to show an alert here
-            print("Failed to save server: \(error)")
+            log.error("Failed to save server: \(error)")
         }
     }
 }

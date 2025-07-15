@@ -17,9 +17,16 @@ struct McSrvrSApp: App {
     }()
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-        .modelContainer(sharedModelContainer)
+        #if os(macOS)
+            Window("McSrvrS", id: "main") {
+                ContentView()
+            }
+            .modelContainer(sharedModelContainer)
+        #else
+            WindowGroup {
+                ContentView()
+            }
+            .modelContainer(sharedModelContainer)
+        #endif
     }
 }
