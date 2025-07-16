@@ -7,6 +7,15 @@ extension String {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .joined(separator: " ")
     }
+
+    func trimmingFormatCodes() -> String {
+        self.replacingOccurrences(
+            of: "§[0-9a-flmnork]",
+            with: "",
+            options: .regularExpression
+        )
+    }
+
 }
 
 extension Server.Status {
@@ -16,7 +25,7 @@ extension Server.Status {
         var attributedString = AttributedString()
         var currentText = ""
         var currentAttributes = AttributeContainer()
-        
+
         // Set default white color for text without color codes
         if !skipColor {
             currentAttributes.foregroundColor = .white
@@ -39,20 +48,20 @@ extension Server.Status {
         func getColor(for code: Character) -> Color? {
             switch code {
             case "0": return .black
-            case "1": return Color(red: 0.0, green: 0.0, blue: 0.67) // Dark Blue
-            case "2": return Color(red: 0.0, green: 0.67, blue: 0.0) // Dark Green
-            case "3": return Color(red: 0.0, green: 0.67, blue: 0.67) // Dark Aqua
-            case "4": return Color(red: 0.67, green: 0.0, blue: 0.0) // Dark Red
-            case "5": return Color(red: 0.67, green: 0.0, blue: 0.67) // Dark Purple
-            case "6": return Color(red: 1.0, green: 0.67, blue: 0.0) // Gold
-            case "7": return Color(red: 0.67, green: 0.67, blue: 0.67) // Gray
-            case "8": return Color(red: 0.33, green: 0.33, blue: 0.33) // Dark Gray
-            case "9": return Color(red: 0.33, green: 0.33, blue: 1.0) // Blue
-            case "a": return Color(red: 0.33, green: 1.0, blue: 0.33) // Green
-            case "b": return Color(red: 0.33, green: 1.0, blue: 1.0) // Aqua
-            case "c": return Color(red: 1.0, green: 0.33, blue: 0.33) // Red
-            case "d": return Color(red: 1.0, green: 0.33, blue: 1.0) // Light Purple
-            case "e": return Color(red: 1.0, green: 1.0, blue: 0.33) // Yellow
+            case "1": return Color(red: 0.0, green: 0.0, blue: 0.67)  // Dark Blue
+            case "2": return Color(red: 0.0, green: 0.67, blue: 0.0)  // Dark Green
+            case "3": return Color(red: 0.0, green: 0.67, blue: 0.67)  // Dark Aqua
+            case "4": return Color(red: 0.67, green: 0.0, blue: 0.0)  // Dark Red
+            case "5": return Color(red: 0.67, green: 0.0, blue: 0.67)  // Dark Purple
+            case "6": return Color(red: 1.0, green: 0.67, blue: 0.0)  // Gold
+            case "7": return Color(red: 0.67, green: 0.67, blue: 0.67)  // Gray
+            case "8": return Color(red: 0.33, green: 0.33, blue: 0.33)  // Dark Gray
+            case "9": return Color(red: 0.33, green: 0.33, blue: 1.0)  // Blue
+            case "a": return Color(red: 0.33, green: 1.0, blue: 0.33)  // Green
+            case "b": return Color(red: 0.33, green: 1.0, blue: 1.0)  // Aqua
+            case "c": return Color(red: 1.0, green: 0.33, blue: 0.33)  // Red
+            case "d": return Color(red: 1.0, green: 0.33, blue: 1.0)  // Light Purple
+            case "e": return Color(red: 1.0, green: 1.0, blue: 0.33)  // Yellow
             case "f": return .white
             default: return .white
             }

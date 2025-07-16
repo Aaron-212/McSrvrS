@@ -71,8 +71,7 @@ struct ServerDetailView: View {
     }
 
     private var serverStatusSection: some View {
-        VStack(spacing: 0) {
-            // Section Header
+        SectionView {
             HStack {
                 Label("Server Status", systemImage: "server.rack")
                     .font(.headline)
@@ -85,32 +84,12 @@ struct ServerDetailView: View {
                     .fontWeight(.medium)
                     .foregroundStyle(connectionStatusColor)
             }
-
-            Divider()
-                .padding(.vertical)
-
-            // Content
+        } content: {
             VStack(alignment: .leading, spacing: 12) {
                 switch server.serverState {
                 case .success(let status):
                     if let motd = status.parseMotd() {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Message of the Day")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.secondary)
-                                .textCase(.uppercase)
-
-                            Text(motd)
-                                .font(.body)
-                                .textSelection(.enabled)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(.black)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                        }
-                        .padding(.bottom, 8)
+                        MotdView(motd: motd)
                     }
 
                     HStack {
@@ -142,7 +121,7 @@ struct ServerDetailView: View {
                                 .foregroundStyle(.secondary)
                                 .textCase(.uppercase)
 
-                            Text(status.version.name)
+                            Text(status.version.name.trimmingFormatCodes())
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }
@@ -183,19 +162,14 @@ struct ServerDetailView: View {
     }
 
     private var connectionHistorySection: some View {
-        VStack(spacing: 0) {
-            // Section Header
+        SectionView {
             HStack {
                 Label("Connection History", systemImage: "clock.arrow.circlepath")
                     .font(.headline)
 
                 Spacer()
             }
-
-            Divider()
-                .padding(.vertical)
-
-            // Content
+        } content: {
             VStack(spacing: 16) {
                 HStack {
                     Label(connectionStatusTitle, systemImage: "circle.fill")
@@ -247,8 +221,7 @@ struct ServerDetailView: View {
 
     @ViewBuilder
     private func playersSection(status: Server.Status) -> some View {
-        VStack(spacing: 0) {
-            // Section Header
+        SectionView {
             HStack {
                 Label("Players", systemImage: "person.2.fill")
                     .font(.headline)
@@ -266,49 +239,12 @@ struct ServerDetailView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
             }
-
-            Divider()
-                .padding(.vertical)
-
-            // Content
+        } content: {
             VStack(spacing: 12) {
                 if let players = status.players, let playerSample = players.sample, !playerSample.isEmpty {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
-                            HStack(spacing: 12) {
-                                Group {
-                                    if let avatarUrl = player.avatarUrl {
-                                        CachedAsyncImage(url: avatarUrl) { phase in
-                                            switch phase {
-                                            case .success(let image):
-                                                image
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 32, height: 32)
-                                            default:
-                                                Image("Steve")
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fit)
-                                                    .frame(width: 32, height: 32)
-                                            }
-                                        }
-                                    } else {
-                                        Image("Steve")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 32, height: 32)
-                                    }
-                                }
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-
-                                Text(player.name)
-                                    .font(.callout)
-                                    .fontWeight(.medium)
-                                    .textSelection(.enabled)
-
-                                Spacer()
-                            }
+                            PlayerItemView(player: player)
                         }
                     }
 
@@ -344,6 +280,92 @@ struct ServerDetailView: View {
             }
         }
         .padding()
+    }
+
+    // MARK: - Custom Views
+
+    private struct MotdView: View {
+        @Environment(\.colorScheme) var colorScheme
+
+        let motd: AttributedString
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Message of the Day")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                Text(motd)
+                    .font(.body)
+                    .textSelection(.enabled)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(.black)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                colorScheme == .dark ? Color.white.opacity(0.3) : Color.clear,
+                                lineWidth: 1
+                            )
+                    )
+                    .colorScheme(.dark)
+            }
+            .padding(.bottom, 8)
+        }
+    }
+
+    private struct PlayerItemView: View {
+        let player: Server.Player
+
+        var body: some View {
+            HStack(spacing: 12) {
+                CachedAsyncImage(url: player.avatarUrl) { phase in
+                    if case .success(let image) = phase {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } else {
+                        Image("Steve")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .frame(width: 32, height: 32)
+
+                Text(player.name)
+                    .font(.callout)
+                    .fontWeight(.medium)
+                    .textSelection(.enabled)
+
+                Spacer()
+            }
+        }
+    }
+
+    private struct SectionView<Header: View, Content: View>: View {
+        let header: Header
+        let content: Content
+
+        init(
+            @ViewBuilder header: () -> Header,
+            @ViewBuilder content: () -> Content
+        ) {
+            self.header = header()
+            self.content = content()
+        }
+
+        var body: some View {
+            VStack(spacing: 0) {
+                header
+                Divider()
+                    .padding(.vertical)
+                content
+            }
+        }
     }
 
     // MARK: - Computed Properties
