@@ -23,12 +23,12 @@ struct ServerItemView: View {
                 .lineLimit(1)
 
                 Group {
-                    switch server.serverState {
-                    case .success(let status):
+                    switch server.currentState {
+                    case .success(let statusData):
                         HStack {
                             HStack(spacing: 4) {
-                                Image(systemName: "cellularbars", variableValue: status.latencyVariableColor)
-                                if let latency = status.latency {
+                                Image(systemName: "cellularbars", variableValue: statusData.latencyVariableColor)
+                                if let latency = statusData.latency {
                                     Text(verbatim: "\(latency) ms")
                                 } else {
                                     Text("N/A")
@@ -36,7 +36,7 @@ struct ServerItemView: View {
                             }
                             HStack(spacing: 4) {
                                 Image(systemName: "person.2.fill")
-                                if let players = status.players {
+                                if let players = statusData.players {
                                     Text("\(players.online) / \(players.max)")
                                 } else {
                                     Text(verbatim: "???")
@@ -45,7 +45,7 @@ struct ServerItemView: View {
                         }
                         .lineLimit(1)
                         .font(.callout)
-                        if let motd = status.parseMotd(skipColor: true, trimWhitespace: true) {
+                        if let motd = statusData.parseMotd(skipColor: true, trimWhitespace: true) {
                             Text(motd)
                                 .font(.caption)
                                 .lineLimit(1)

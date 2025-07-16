@@ -5,7 +5,8 @@ import SwiftUI
 struct McSrvrSApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Server.self
+            Server.self,
+            ServerStatus.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

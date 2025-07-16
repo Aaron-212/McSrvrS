@@ -105,8 +105,6 @@ struct ServerForm: View {
             existingServer.host = trimmedHost
             existingServer.port = portNumber
 
-            // Reset server state since host/port might have changed
-            existingServer.serverState = .loading
             existingServer.lastUpdatedDate = Date()
             serverToUpdate = existingServer
         } else {

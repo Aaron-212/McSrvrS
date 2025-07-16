@@ -12,7 +12,8 @@ final class Server {
     var host: String
     var port: UInt16
     // Auto generated
-    var serverState: ServerState
+    @Relationship(deleteRule: .cascade, inverse: \ServerStatus.server)
+    var statuses: [ServerStatus] = []
     var lastSeenDate: Date?
     var lastUpdatedDate: Date
 
@@ -21,90 +22,14 @@ final class Server {
         self.name = name
         self.host = host
         self.port = port
-        self.serverState = .loading
         self.lastUpdatedDate = Date.now
-    }
-
-    // MARK: - Internal Data Structures (SwiftData)
-
-    struct Version: Codable {
-        let name: String
-    }
-
-    struct Player: Codable {
-        let id: UUID // Generated UUID for uniqueness
-        let name: String
-        let playerId: String // Original UUID from server
-
-        var avatarUrl: URL? {
-            if self.playerId == "00000000-0000-0000-0000-000000000000" {
-                return nil // No avatar for anonymous players
-            } else {
-                return URL(string: "https://mc-heads.net/avatar/\(self.playerId)")
-            }
-        }
-        
-        init(name: String, playerId: String) {
-            self.id = UUID()
-            self.name = name
-            self.playerId = playerId
-        }
-        
-        enum CodingKeys: String, CodingKey {
-            case name
-            case playerId = "id"
-        }
-        
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            self.id = UUID()
-            self.name = try container.decode(String.self, forKey: .name)
-            self.playerId = try container.decode(String.self, forKey: .playerId)
-        }
-        
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(name, forKey: .name)
-            try container.encode(playerId, forKey: .playerId)
-        }
-    }
-
-    struct Players: Codable {
-        let max: UInt32
-        let online: UInt32
-        let sample: [Player]?
-    }
-
-    struct Status: Codable {
-        let version: Version
-        let players: Players?
-        let motd: String?
-        let favicon: String?
-        let latency: UInt64?
-
-        // Variable Color for SF Symbol
-        public var latencyVariableColor: Double {
-            guard let latency = latency else { return 0.0 }
-            switch latency {
-            case 0..<50:
-                return 1.0
-            case 50..<100:
-                return 0.75
-            case 100..<200:
-                return 0.5
-            case 200..<300:
-                return 0.25
-            default:
-                return 0.0
-            }
-        }
     }
 
     // MARK: - External DTO (JSON Parsing)
 
     private struct StatusDto: Codable {
-        let version: Version
-        let players: Players?
+        let version: ServerStatus.Version
+        let players: ServerStatus.Players?
         let motd: String?
         let favicon: String?
 
@@ -116,8 +41,8 @@ final class Server {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
-            version = try container.decode(Version.self, forKey: .version)
-            players = try container.decode(Players.self, forKey: .players)
+            version = try container.decode(ServerStatus.Version.self, forKey: .version)
+            players = try container.decode(ServerStatus.Players.self, forKey: .players)
             favicon = try container.decodeIfPresent(String.self, forKey: .favicon)
 
             // Handle motd which can be either string or object with text field
@@ -140,8 +65,8 @@ final class Server {
             try container.encodeIfPresent(favicon, forKey: .favicon)
         }
 
-        func toStatus(latency: UInt64?) -> Status {
-            return Status(
+        func toStatusData(latency: UInt64?) -> ServerStatus.StatusData {
+            return ServerStatus.StatusData(
                 version: version,
                 players: players,
                 motd: motd,
@@ -164,21 +89,6 @@ final class Server {
         }
     }
 
-    enum ServerState: Codable {
-        case loading
-        case success(Status)
-        case error(String)
-
-        mutating func updateStatus(with result: Result<Status, Error>) {
-            switch result {
-            case .success(let status):
-                self = .success(status)
-            case .failure(let error):
-                self = .error(error.localizedDescription)
-            }
-        }
-    }
-
     var addressDescription: String {
         if self.host.contains(":") {
             // probably an IPv6 address
@@ -188,11 +98,28 @@ final class Server {
         }
     }
 
+    // MARK: - Convenience Properties for Status
+    
+    var latestStatus: ServerStatus? {
+        return statuses.sorted(by: { $0.timestamp > $1.timestamp }).first
+    }
+    
+    var currentState: ServerStatus.StatusState {
+        return latestStatus?.state ?? .loading
+    }
+    
+    var isOnline: Bool {
+        if case .success = currentState { return true }
+        return false
+    }
+
     // MARK: - Server Status Updates
 
     @MainActor
     func updateStatus() async {
-        self.serverState = .loading
+        // Add loading status
+        let loadingStatus = ServerStatus(server: self, state: .loading)
+        statuses.append(loadingStatus)
 
         let pingResult = await JavaServerPinger.shared.ping(host: self.host, port: self.port)
 
@@ -203,17 +130,20 @@ final class Server {
             let parseResult = StatusDto.parse(json)
             switch parseResult {
             case .success(let dto):
-                let status = dto.toStatus(latency: UInt64(latency))
+                let statusData = dto.toStatusData(latency: UInt64(latency))
                 log.info("Parsed server status")
-                self.serverState = .success(status)
+                let successStatus = ServerStatus(server: self, state: .success(statusData))
+                statuses.append(successStatus)
                 self.lastSeenDate = .now
             case .failure(let error):
                 log.error("Failed to parse server status: \(error)")
-                self.serverState = .error(error.localizedDescription)
+                let errorStatus = ServerStatus(server: self, state: .error(error.localizedDescription))
+                statuses.append(errorStatus)
             }
         case .failure(let error):
             print("Ping failed: \(error)")
-            self.serverState = .error(error.description)
+            let errorStatus = ServerStatus(server: self, state: .error(error.description))
+            statuses.append(errorStatus)
         }
 
         self.lastUpdatedDate = .now

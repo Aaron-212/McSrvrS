@@ -81,10 +81,7 @@ struct ContentView: View {
             return searchFiltered
         } else {
             return searchFiltered.filter { server in
-                if case .success = server.serverState {
-                    return true
-                }
-                return false
+                server.isOnline
             }
         }
     }

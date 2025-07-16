@@ -18,7 +18,7 @@ extension String {
 
 }
 
-extension Server.Status {
+extension ServerStatus.StatusData {
     func parseMotd(skipColor: Bool = false, trimWhitespace: Bool = false) -> AttributedString? {
         guard let motd = self.motd else { return nil }
 

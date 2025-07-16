@@ -15,8 +15,8 @@ struct ServerDetailView: View {
                 serverStatusSection
 
                 // Players Section (if available)
-                if case .success(let status) = server.serverState {
-                    playersSection(status: status)
+                if case .success(let statusData) = server.currentState {
+                    playersSection(statusData: statusData)
                 }
 
                 // Connection History Section
@@ -86,9 +86,9 @@ struct ServerDetailView: View {
             }
         } content: {
             VStack(alignment: .leading, spacing: 12) {
-                switch server.serverState {
-                case .success(let status):
-                    if let motd = status.parseMotd() {
+                switch server.currentState {
+                case .success(let statusData):
+                    if let motd = statusData.parseMotd() {
                         MotdView(motd: motd)
                     }
 
@@ -101,7 +101,7 @@ struct ServerDetailView: View {
                                 .textCase(.uppercase)
 
                             Group {
-                                if let latency = status.latency {
+                                if let latency = statusData.latency {
                                     Text(verbatim: "\(latency) ms")
                                 } else {
                                     Text("N/A")
@@ -121,7 +121,7 @@ struct ServerDetailView: View {
                                 .foregroundStyle(.secondary)
                                 .textCase(.uppercase)
 
-                            Text(status.version.name.trimmingFormatCodes())
+                            Text(statusData.version.name.trimmingFormatCodes())
                                 .font(.title3)
                                 .fontWeight(.semibold)
                         }
@@ -220,7 +220,7 @@ struct ServerDetailView: View {
     }
 
     @ViewBuilder
-    private func playersSection(status: Server.Status) -> some View {
+    private func playersSection(statusData: ServerStatus.StatusData) -> some View {
         SectionView {
             HStack {
                 Label("Players", systemImage: "person.2.fill")
@@ -229,7 +229,7 @@ struct ServerDetailView: View {
                 Spacer()
 
                 Group {
-                    if let players = status.players {
+                    if let players = statusData.players {
                         Text("\(players.online) / \(players.max)")
                     } else {
                         Text(verbatim: "???")
@@ -241,7 +241,7 @@ struct ServerDetailView: View {
             }
         } content: {
             VStack(spacing: 12) {
-                if let players = status.players, let playerSample = players.sample, !playerSample.isEmpty {
+                if let players = statusData.players, let playerSample = players.sample, !playerSample.isEmpty {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
                             PlayerItemView(player: player)
@@ -254,7 +254,7 @@ struct ServerDetailView: View {
                             .foregroundStyle(.secondary)
                             .padding(.top, 4)
                     }
-                } else if let players = status.players, players.online > 0 {
+                } else if let players = statusData.players, players.online > 0 {
                     VStack(spacing: 8) {
                         Image(systemName: "person.2.slash")
                             .font(.title2)
@@ -318,7 +318,7 @@ struct ServerDetailView: View {
     }
 
     private struct PlayerItemView: View {
-        let player: Server.Player
+        let player: ServerStatus.Player
 
         var body: some View {
             HStack(spacing: 12) {
@@ -371,7 +371,7 @@ struct ServerDetailView: View {
     // MARK: - Computed Properties
 
     private var statusColor: Color {
-        switch server.serverState {
+        switch server.currentState {
         case .success:
             return .green
         case .error:
@@ -383,7 +383,7 @@ struct ServerDetailView: View {
     }
 
     private var statusText: String {
-        switch server.serverState {
+        switch server.currentState {
         case .success:
             return "Online"
         case .error:
@@ -394,7 +394,7 @@ struct ServerDetailView: View {
     }
 
     private var connectionStatusColor: Color {
-        switch server.serverState {
+        switch server.currentState {
         case .success:
             return .green
         case .error:
@@ -405,7 +405,7 @@ struct ServerDetailView: View {
     }
 
     private var connectionStatusTitle: String {
-        switch server.serverState {
+        switch server.currentState {
         case .success:
             return "Connected"
         case .error:

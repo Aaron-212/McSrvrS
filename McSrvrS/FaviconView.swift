@@ -7,11 +7,11 @@ import SwiftUI
 #endif
 
 struct FaviconView: View {
-    let serverState: Server.ServerState
+    let serverState: ServerStatus.StatusState
 
     var body: some View {
-        if case .success(let status) = serverState,
-           let image = decodeBase64PNG(from: status.favicon) {
+        if case .success(let statusData) = serverState,
+           let image = decodeBase64PNG(from: statusData.favicon) {
             image
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -43,8 +43,8 @@ struct FaviconView: View {
     }
 }
 
-// Convenience extension for Server.Status
-extension Server.Status {
+// Convenience extension for ServerStatus.StatusData
+extension ServerStatus.StatusData {
     var faviconView: some View {
         FaviconView(serverState: .success(self))
     }
@@ -53,6 +53,6 @@ extension Server.Status {
 // Convenience extension for Server
 extension Server {
     var faviconView: some View {
-        FaviconView(serverState: self.serverState)
+        FaviconView(serverState: self.currentState)
     }
 }
