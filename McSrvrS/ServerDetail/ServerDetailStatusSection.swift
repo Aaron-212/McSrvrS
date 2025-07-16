@@ -127,4 +127,4 @@ struct ServerDetailStatusSection: View {
             return "Checking..."
         }
     }
-} 
+}

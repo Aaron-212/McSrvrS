@@ -5,12 +5,12 @@ import os
 // A dedicated service for handling Minecraft Server List Ping
 actor JavaServerPinger {
     static let shared = JavaServerPinger()
-    let log : Logger
+    let log: Logger
 
     private init() {
         self.log = Logger(subsystem: "personal.aaron212.mcsrv", category: "JavaServerPinger")
     }
-    
+
     enum PingerError: Error {
         case connectionFailed(Error)
         case timedOut

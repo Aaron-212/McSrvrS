@@ -30,30 +30,30 @@ struct ServerForm: View {
                     footer: Text("Default port for Minecraft servers is 25565")
                 ) {
                     #if os(macOS)
-                    TextField("Server Name", text: $name, prompt: Text("Example Server"))
-                    
-                    TextField("Host", text: $host, prompt: Text("example.net"))
+                        TextField("Server Name", text: $name, prompt: Text("Example Server"))
 
-                    TextField("Port", value: $port, formatter: NumberFormatter(), prompt: Text("25565"))
+                        TextField("Host", text: $host, prompt: Text("example.net"))
+
+                        TextField("Port", value: $port, formatter: NumberFormatter(), prompt: Text("25565"))
                     #else
-                    LabeledContent("Server Name") {
-                        TextField("Example Server", text: $name)
-                            .multilineTextAlignment(.trailing)
-                    }
+                        LabeledContent("Server Name") {
+                            TextField("Example Server", text: $name)
+                                .multilineTextAlignment(.trailing)
+                        }
 
-                    LabeledContent("Host") {
-                        TextField("example.net", text: $host)
-                            .autocapitalization(.none)
-                            .autocorrectionDisabled()
-                            .keyboardType(.URL)
-                            .multilineTextAlignment(.trailing)
-                    }
+                        LabeledContent("Host") {
+                            TextField("example.net", text: $host)
+                                .autocapitalization(.none)
+                                .autocorrectionDisabled()
+                                .keyboardType(.URL)
+                                .multilineTextAlignment(.trailing)
+                        }
 
-                    LabeledContent("Port") {
-                        TextField("25565", value: $port, formatter: NumberFormatter())
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                    }
+                        LabeledContent("Port") {
+                            TextField("25565", value: $port, formatter: NumberFormatter())
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                        }
                     #endif
                 }
             }

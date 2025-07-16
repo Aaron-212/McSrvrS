@@ -6,24 +6,24 @@ struct EmptyStateView: View {
     let isFiltering: Bool
     let searchText: String
     let addServerAction: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: hasServers ? "magnifyingglass" : "server.rack")
                 .font(.largeTitle)
                 .foregroundStyle(.tertiary)
-            
+
             VStack {
                 Text(titleText)
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Text(subtitleText)
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
+
             if !hasServers {
                 Button(action: addServerAction) {
                     Label("Add Server", systemImage: "plus")
@@ -35,7 +35,7 @@ struct EmptyStateView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var titleText: String {
         if !hasServers {
             return "No Servers Added"
@@ -47,7 +47,7 @@ struct EmptyStateView: View {
             return "No Results"
         }
     }
-    
+
     private var subtitleText: String {
         if !hasServers {
             return "Add your first Minecraft server to get started"
@@ -91,10 +91,20 @@ struct ContentView: View {
             Group {
                 if servers.isEmpty {
                     // Fallback view when no servers exist
-                    EmptyStateView(hasServers: false, isFiltering: isFiltering, searchText: searchText, addServerAction: addServer)
+                    EmptyStateView(
+                        hasServers: false,
+                        isFiltering: isFiltering,
+                        searchText: searchText,
+                        addServerAction: addServer
+                    )
                 } else if filteredServers.isEmpty {
                     // Fallback view when servers exist but filtered results are empty
-                    EmptyStateView(hasServers: true, isFiltering: isFiltering, searchText: searchText, addServerAction: addServer)
+                    EmptyStateView(
+                        hasServers: true,
+                        isFiltering: isFiltering,
+                        searchText: searchText,
+                        addServerAction: addServer
+                    )
                 } else {
                     List {
                         ForEach(filteredServers) { server in

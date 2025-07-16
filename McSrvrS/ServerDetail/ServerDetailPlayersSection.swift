@@ -64,4 +64,4 @@ struct ServerDetailPlayersSection: View {
         }
         .padding()
     }
-} 
+}

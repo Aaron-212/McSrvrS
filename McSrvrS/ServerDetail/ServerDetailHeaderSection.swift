@@ -25,4 +25,4 @@ struct ServerDetailHeaderSection: View {
         }
         .padding(.vertical)
     }
-} 
+}

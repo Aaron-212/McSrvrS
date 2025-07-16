@@ -83,4 +83,4 @@ struct PlayerItemView: View {
             Spacer()
         }
     }
-} 
+}

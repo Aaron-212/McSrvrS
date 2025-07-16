@@ -82,4 +82,4 @@ struct ServerDetailConnectionHistorySection: View {
             return "Checking..."
         }
     }
-} 
+}

@@ -64,4 +64,4 @@ struct ServerDetailView: View {
     NavigationView {
         ServerDetailView(server: server)
     }
-} 
+}

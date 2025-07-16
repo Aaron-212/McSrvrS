@@ -11,7 +11,8 @@ struct FaviconView: View {
 
     var body: some View {
         if case .success(let statusData) = serverState,
-           let image = decodeBase64PNG(from: statusData.favicon) {
+            let image = decodeBase64PNG(from: statusData.favicon)
+        {
             image
                 .resizable()
                 .aspectRatio(contentMode: .fit)

@@ -6,7 +6,7 @@ struct McSrvrSApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Server.self,
-            ServerStatus.self
+            ServerStatus.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
