@@ -6,7 +6,7 @@ enum QuerySpan: String, CaseIterable {
     case last7Days = "7 Days"
     case last30Days = "30 Days"
     case lastQuarter = "Quarter"
-    case lastYear = "Year" // all data
+    case lastYear = "Year"  // all data
 }
 
 struct PlayerCountDataPoint {
@@ -21,59 +21,57 @@ struct ServerDetailPlayersChartSection: View {
     var body: some View {
         let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
 
-        if !playerCountHistory.isEmpty {
-            SectionView {
-                HStack {
-                    Label("Player Count History", systemImage: "chart.line.uptrend.xyaxis")
-                        .font(.headline)
+        SectionView {
+            HStack {
+                Label("Player Count History", systemImage: "chart.line.uptrend.xyaxis")
+                    .font(.headline)
 
-                    Spacer()
-                }
-            } content: {
-                VStack(alignment: .leading, spacing: 12) {
-                    Picker("Select Span", selection: $selectedSpan) {
-                        ForEach(QuerySpan.allCases, id: \.self) { span in
-                            Text(span.rawValue)
-                                .tag(span)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .frame(maxWidth: .infinity)
-
-                    Chart(playerCountHistory, id: \.timestamp) { dataPoint in
-                        if let playerCount = dataPoint.playerCount {
-                            LineMark(
-                                x: .value("Time", dataPoint.timestamp),
-                                y: .value("Players", playerCount)
-                            )
-
-                            AreaMark(
-                                x: .value("Time", dataPoint.timestamp),
-                                y: .value("Players", playerCount),
-                                series: .value("Players", "P")
-                            )
-                            .foregroundStyle(
-                                LinearGradient(
-                                    gradient: Gradient(
-                                        colors: [
-                                            .accent.opacity(0.5),
-                                            .accent.opacity(0.2),
-                                            .accent.opacity(0.0),
-                                        ]
-                                    ),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                        }
-                    }
-                    .frame(height: 200)
-                    .chartYScale(domain: 0...max(1, playerCountHistory.compactMap(\.playerCount).max() ?? 1))
-                }
+                Spacer()
             }
-            .padding()
+        } content: {
+            VStack(alignment: .leading, spacing: 12) {
+                Picker("Select Span", selection: $selectedSpan) {
+                    ForEach(QuerySpan.allCases, id: \.self) { span in
+                        Text(span.rawValue)
+                            .tag(span)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
+
+                Chart(playerCountHistory, id: \.timestamp) { dataPoint in
+                    if let playerCount = dataPoint.playerCount {
+                        LineMark(
+                            x: .value("Time", dataPoint.timestamp),
+                            y: .value("Players", playerCount)
+                        )
+
+                        AreaMark(
+                            x: .value("Time", dataPoint.timestamp),
+                            y: .value("Players", playerCount),
+                            series: .value("Players", "P")
+                        )
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(
+                                    colors: [
+                                        .accent.opacity(0.5),
+                                        .accent.opacity(0.2),
+                                        .accent.opacity(0.0),
+                                    ]
+                                ),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                    }
+                }
+                .frame(height: 200)
+                .chartYScale(domain: 0...max(1, playerCountHistory.compactMap(\.playerCount).max() ?? 1))
+            }
         }
+        .padding()
     }
 
     private func getPlayerCountHistory(for span: QuerySpan) -> [PlayerCountDataPoint] {
@@ -97,14 +95,15 @@ struct ServerDetailPlayersChartSection: View {
         }
 
         let allStatuses = server.statuses
-            .filter { $0.timestamp >= startDate } // Filter by date range
+            .filter { $0.timestamp >= startDate }  // Filter by date range
             .sorted { $0.timestamp < $1.timestamp }
 
         return allStatuses.map { status in
             let playerCount: Int?
-            
+
             if let statusData = status.statusData,
-               let players = statusData.players {
+                let players = statusData.players
+            {
                 playerCount = Int(players.online)
             } else {
                 // Failed status - pass nil to show gap in chart
@@ -117,4 +116,4 @@ struct ServerDetailPlayersChartSection: View {
             )
         }
     }
-} 
+}
