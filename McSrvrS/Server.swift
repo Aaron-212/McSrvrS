@@ -147,5 +147,26 @@ final class Server {
         }
 
         self.lastUpdatedDate = .now
+        
+        // Cleanup old status records periodically (every 10th update)
+        if statuses.count % 10 == 0 {
+            cleanupOldStatuses()
+        }
+    }
+    
+    // MARK: - Cleanup
+    
+    private func cleanupOldStatuses() {
+        guard let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date.now) else {
+            return
+        }
+        
+        let initialCount = statuses.count
+        statuses.removeAll { $0.timestamp < oneYearAgo }
+        
+        let removedCount = initialCount - statuses.count
+        if removedCount > 0 {
+            log.info("Cleaned up \(removedCount) old status records for server '\(self.name)'")
+        }
     }
 }
