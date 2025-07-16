@@ -20,6 +20,7 @@ struct ServerDetailPlayersChartSection: View {
 
     var body: some View {
         let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
+        let hasData = playerCountHistory.contains { $0.playerCount != nil }
 
         SectionView {
             HStack {
@@ -40,35 +41,52 @@ struct ServerDetailPlayersChartSection: View {
                 .labelsHidden()
                 .frame(maxWidth: .infinity)
 
-                Chart(playerCountHistory, id: \.timestamp) { dataPoint in
-                    if let playerCount = dataPoint.playerCount {
-                        LineMark(
-                            x: .value("Time", dataPoint.timestamp),
-                            y: .value("Players", playerCount)
-                        )
+                Group {
+                    if hasData {
+                        Chart(playerCountHistory, id: \.timestamp) { dataPoint in
+                            if let playerCount = dataPoint.playerCount {
+                                LineMark(
+                                    x: .value("Time", dataPoint.timestamp),
+                                    y: .value("Players", playerCount)
+                                )
 
-                        AreaMark(
-                            x: .value("Time", dataPoint.timestamp),
-                            y: .value("Players", playerCount),
-                            series: .value("Players", "P")
-                        )
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(
-                                    colors: [
-                                        .accent.opacity(0.5),
-                                        .accent.opacity(0.2),
-                                        .accent.opacity(0.0),
-                                    ]
-                                ),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+                                AreaMark(
+                                    x: .value("Time", dataPoint.timestamp),
+                                    y: .value("Players", playerCount),
+                                    series: .value("Players", "P")
+                                )
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        gradient: Gradient(
+                                            colors: [
+                                                .accent.opacity(0.5),
+                                                .accent.opacity(0.2),
+                                                .accent.opacity(0.0),
+                                            ]
+                                        ),
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    )
+                                )
+                            }
+                        }
+                        .frame(height: 240)
+                        .chartYScale(domain: 0...max(10, playerCountHistory.compactMap(\.playerCount).max() ?? 10))
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.title2)
+                                .foregroundStyle(.secondary)
+
+                            Text("No player count data available")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding()
                     }
                 }
-                .frame(height: 200)
-                .chartYScale(domain: 0...max(1, playerCountHistory.compactMap(\.playerCount).max() ?? 1))
+                .frame(maxWidth: .infinity)
+
             }
         }
         .padding()
