@@ -14,9 +14,22 @@
 		8D5E8D412E20BCBF007603B3 /* McSrvrS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = McSrvrS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		8DED9FD02E27856D00BB7DD6 /* Exceptions for "McSrvrS" folder in "McSrvrS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			platformFiltersByRelativePath = {
+				Info.plist = (macos, );
+			};
+			target = 8D5E8D402E20BCBF007603B3 /* McSrvrS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8D5E8D432E20BCBF007603B3 /* McSrvrS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				8DED9FD02E27856D00BB7DD6 /* Exceptions for "McSrvrS" folder in "McSrvrS" target */,
+			);
 			path = McSrvrS;
 			sourceTree = "<group>";
 		};

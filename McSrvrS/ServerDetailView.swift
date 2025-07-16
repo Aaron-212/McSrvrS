@@ -1,9 +1,11 @@
 import CachedAsyncImage
+import Charts
 import SwiftUI
 
 struct ServerDetailView: View {
     let server: Server
     @State private var showingEditForm = false
+    @State private var selectedSpan: QuerySpan = .last30Days
 
     var body: some View {
         ScrollView {
@@ -18,6 +20,9 @@ struct ServerDetailView: View {
                 if case .success(let statusData) = server.currentState {
                     playersSection(statusData: statusData)
                 }
+
+                // Players Chart Section
+                playersChartSection
 
                 // Connection History Section
                 connectionHistorySection
@@ -190,7 +195,7 @@ struct ServerDetailView: View {
 
                         Spacer()
 
-                        Text(server.lastUpdatedDate.formatted(date: .abbreviated, time: .shortened))
+                        Text(server.lastUpdatedDate.formatted(date: .abbreviated, time: .complete))
                             .font(.callout)
                             .foregroundStyle(.primary)
                     }
@@ -205,7 +210,7 @@ struct ServerDetailView: View {
                         Spacer()
 
                         if let lastSeenDate = server.lastSeenDate {
-                            Text(lastSeenDate.formatted(date: .abbreviated, time: .shortened))
+                            Text(lastSeenDate.formatted(date: .abbreviated, time: .complete))
                                 .font(.callout)
                         } else {
                             Text("Never")
@@ -280,6 +285,65 @@ struct ServerDetailView: View {
             }
         }
         .padding()
+    }
+
+    @ViewBuilder
+    private var playersChartSection: some View {
+        let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
+
+        if !playerCountHistory.isEmpty {
+            SectionView {
+                HStack {
+                    Label("Player Count History", systemImage: "chart.line.uptrend.xyaxis")
+                        .font(.headline)
+
+                    Spacer()
+                }
+            } content: {
+                VStack(alignment: .leading, spacing: 12) {
+                    Picker("Selecte Span", selection: $selectedSpan) {
+                        ForEach(QuerySpan.allCases, id: \.self) { span in
+                            Text(span.rawValue)
+                                .tag(span)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+
+                    Chart(playerCountHistory, id: \.timestamp) { dataPoint in
+                        if let playerCount = dataPoint.playerCount {
+                            LineMark(
+                                x: .value("Time", dataPoint.timestamp),
+                                y: .value("Players", playerCount)
+                            )
+
+                            AreaMark(
+                                x: .value("Time", dataPoint.timestamp),
+                                y: .value("Players", playerCount),
+                                series: .value("Players", "P")
+                            )
+                            .foregroundStyle(
+                                LinearGradient(
+                                    gradient: Gradient(
+                                        colors: [
+                                            .accent.opacity(0.5),
+                                            .accent.opacity(0.2),
+                                            .accent.opacity(0.0),
+                                        ]
+                                    ),
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                        }
+                    }
+                    .frame(height: 200)
+                    .chartYScale(domain: 0...max(1, playerCountHistory.compactMap(\.playerCount).max() ?? 1))
+                }
+            }
+            .padding()
+        }
     }
 
     // MARK: - Custom Views
@@ -415,6 +479,48 @@ struct ServerDetailView: View {
         }
     }
 
+    private func getPlayerCountHistory(for span: QuerySpan) -> [PlayerCountDataPoint] {
+        let now = Date()
+        let calendar = Calendar.current
+
+        // Determine the start date based on the selected span
+        let startDate: Date
+        switch span {
+        case .today:
+            startDate = calendar.startOfDay(for: now)
+        case .last7Days:
+            startDate = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        case .last30Days:
+            startDate = calendar.date(byAdding: .day, value: -30, to: now) ?? now
+        case .lastQuarter:
+            startDate = calendar.date(byAdding: .month, value: -3, to: now) ?? now
+        case .lastYear:
+            // Return all data - use a very old date or no filtering
+            startDate = Date.distantPast
+        }
+
+        let allStatuses = server.statuses
+            .filter { $0.timestamp >= startDate } // Filter by date range
+            .sorted { $0.timestamp < $1.timestamp }
+
+        return allStatuses.map { status in
+            let playerCount: Int?
+            
+            if let statusData = status.statusData,
+               let players = statusData.players {
+                playerCount = Int(players.online)
+            } else {
+                // Failed status - pass nil to show gap in chart
+                playerCount = nil
+            }
+
+            return PlayerCountDataPoint(
+                timestamp: status.timestamp,
+                playerCount: playerCount
+            )
+        }
+    }
+
     // MARK: - Actions
 
     private func refreshServer() {
@@ -422,6 +528,21 @@ struct ServerDetailView: View {
             await server.updateStatus()
         }
     }
+}
+
+enum QuerySpan: String, CaseIterable {
+    case today = "Today"
+    case last7Days = "7 Days"
+    case last30Days = "30 Days"
+    case lastQuarter = "Quarter"
+    case lastYear = "Year" // all data
+}
+
+// MARK: - Data Models
+
+private struct PlayerCountDataPoint {
+    let timestamp: Date
+    let playerCount: Int?
 }
 
 #Preview {
