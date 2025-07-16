@@ -1,12 +1,22 @@
 import Charts
 import SwiftUI
 
-enum QuerySpan: String, CaseIterable {
-    case today = "Today"
-    case last7Days = "7 Days"
-    case last30Days = "30 Days"
-    case lastQuarter = "Quarter"
-    case lastYear = "Year"  // all data
+enum QuerySpan: CaseIterable {
+    case today
+    case last7Days
+    case last30Days
+    case lastQuarter
+    case lastYear  // all data
+
+    var description: LocalizedStringResource {
+        switch self {
+        case .today: return "Today"
+        case .last7Days: return "Week"
+        case .last30Days: return "Month"
+        case .lastQuarter: return "Quater"
+        case .lastYear: return "Year"
+        }
+    }
 }
 
 struct PlayerCountDataPoint {
@@ -33,7 +43,7 @@ struct ServerDetailPlayersChartSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 Picker("Select Span", selection: $selectedSpan) {
                     ForEach(QuerySpan.allCases, id: \.self) { span in
-                        Text(span.rawValue)
+                        Text(span.description)
                             .tag(span)
                     }
                 }

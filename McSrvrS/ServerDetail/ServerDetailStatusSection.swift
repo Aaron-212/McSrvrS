@@ -12,10 +12,7 @@ struct ServerDetailStatusSection: View {
 
                 Spacer()
 
-                Label(connectionStatusTitle, systemImage: "circle.fill")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(connectionStatusColor)
+                ConnectionStatusLabel(server: server, fontSize: .caption, fontWeight: .medium)
             }
         } content: {
             VStack(alignment: .leading, spacing: 12) {
@@ -106,25 +103,5 @@ struct ServerDetailStatusSection: View {
         }
     }
 
-    private var connectionStatusColor: Color {
-        switch server.currentState {
-        case .success:
-            return .green
-        case .error:
-            return server.lastSeenDate == nil ? .red : .orange
-        case .loading:
-            return .accent
-        }
-    }
 
-    private var connectionStatusTitle: String {
-        switch server.currentState {
-        case .success:
-            return "Connected"
-        case .error:
-            return server.lastSeenDate == nil ? "Never Connected" : "Connection Lost"
-        case .loading:
-            return "Checking..."
-        }
-    }
 }

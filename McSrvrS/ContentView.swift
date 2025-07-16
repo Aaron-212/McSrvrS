@@ -36,7 +36,7 @@ struct EmptyStateView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private var titleText: String {
+    private var titleText: LocalizedStringResource {
         if !hasServers {
             return "No Servers Added"
         } else if isFiltering && !searchText.isEmpty {
@@ -48,15 +48,15 @@ struct EmptyStateView: View {
         }
     }
 
-    private var subtitleText: String {
+    private var subtitleText: LocalizedStringResource {
         if !hasServers {
             return "Add your first Minecraft server to get started"
         } else if isFiltering && !searchText.isEmpty {
-            return "No online servers match '\(searchText)'"
+            return "No online servers match \"\(searchText)\""
         } else if isFiltering {
             return "All servers are currently offline"
         } else {
-            return "No servers match '\(searchText)'"
+            return "No servers match \"\(searchText)\""
         }
     }
 }

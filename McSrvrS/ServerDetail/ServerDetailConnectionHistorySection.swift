@@ -14,10 +14,7 @@ struct ServerDetailConnectionHistorySection: View {
         } content: {
             VStack(spacing: 16) {
                 HStack {
-                    Label(connectionStatusTitle, systemImage: "circle.fill")
-                        .font(.callout)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(connectionStatusColor)
+                    ConnectionStatusLabel(server: server, fontSize: .callout, fontWeight: .semibold)
 
                     Spacer()
                 }
@@ -61,25 +58,5 @@ struct ServerDetailConnectionHistorySection: View {
         .padding()
     }
 
-    private var connectionStatusColor: Color {
-        switch server.currentState {
-        case .success:
-            return .green
-        case .error:
-            return server.lastSeenDate == nil ? .red : .orange
-        case .loading:
-            return .accent
-        }
-    }
 
-    private var connectionStatusTitle: String {
-        switch server.currentState {
-        case .success:
-            return "Connected"
-        case .error:
-            return server.lastSeenDate == nil ? "Never Connected" : "Connection Lost"
-        case .loading:
-            return "Checking..."
-        }
-    }
 }
