@@ -7,6 +7,7 @@ import os
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var hasPerformedInitialRefresh = false
+    @State private var refreshTimer: Timer?
 
     private static let refreshID = "personal.aaron212.mcsrvrs.refresh"
 
@@ -63,10 +64,16 @@ struct McSrvrSApp: App {
             if newPhase == .active && !hasPerformedInitialRefresh {
                 hasPerformedInitialRefresh = true
                 Task { await handleAppRefresh() }
+                startForegroundRefreshTimer()
+            } else if newPhase == .active {
+                startForegroundRefreshTimer()
             } else if newPhase == .background {
+                stopForegroundRefreshTimer()
                 #if os(iOS)
                     Task { await scheduleNextRefresh() }
                 #endif
+            } else if newPhase == .inactive {
+                stopForegroundRefreshTimer()
             }
         }
 
@@ -111,4 +118,18 @@ struct McSrvrSApp: App {
             }
         }
     #endif
+
+    private func startForegroundRefreshTimer() {
+        stopForegroundRefreshTimer() // Ensure no duplicate timers
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60 * 5, repeats: true) { _ in
+            Task {
+                await handleAppRefresh()
+            }
+        }
+    }
+
+    private func stopForegroundRefreshTimer() {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+    }
 }
