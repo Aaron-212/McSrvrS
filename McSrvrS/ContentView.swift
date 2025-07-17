@@ -66,6 +66,7 @@ struct ContentView: View {
     @Query private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
+    @State private var showingSettings = false
     @State private var isFiltering = false
 
     private var filteredServers: [Server] {
@@ -139,7 +140,9 @@ struct ContentView: View {
                         EditButton()
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        SettingsView()
+                        Button(action: { showingSettings = true }) {
+                            Label("Settings", systemImage: "gear")
+                        }
                     }
                     ToolbarItemGroup(placement: .bottomBar) {
                         filterServerButton
@@ -180,6 +183,9 @@ struct ContentView: View {
         .sheet(isPresented: $showingServerForm) {
             ServerForm()
                 .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
         }
         .onReceive(NotificationCenter.default.publisher(for: .addNewServer)) { _ in
             addServer()

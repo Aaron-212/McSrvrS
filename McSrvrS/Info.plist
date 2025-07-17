@@ -9,7 +9,7 @@
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.aaron212.McSrvrS.refresh</string>
+		<string>personal.aaron212.mcsrvrs.refresh</string>
 	</array>
 </dict>
 </plist>

@@ -6,6 +6,7 @@ import os
 @main
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("foregroundRefreshInterval") private var refreshInterval: Double = 300 // Default: 5 minutes
     @State private var hasPerformedInitialRefresh = false
     @State private var refreshTimer: Timer?
 
@@ -28,6 +29,18 @@ struct McSrvrSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onChange(of: refreshInterval) { _, _ in
+                    // Restart timer with new interval when the setting changes
+                    if scenePhase == .active {
+                        startForegroundRefreshTimer()
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .refreshIntervalChanged)) { notification in
+                    // Handle refresh interval changes from settings
+                    if scenePhase == .active {
+                        startForegroundRefreshTimer()
+                    }
+                }
         }
         .modelContainer(sharedModelContainer)
         .commands {
@@ -121,11 +134,19 @@ struct McSrvrSApp: App {
 
     private func startForegroundRefreshTimer() {
         stopForegroundRefreshTimer() // Ensure no duplicate timers
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60 * 5, repeats: true) { _ in
+        
+        // Don't start timer if refresh is disabled (interval is 0)
+        guard refreshInterval > 0 else {
+            log.info("Foreground refresh disabled")
+            return
+        }
+        
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { _ in
             Task {
                 await handleAppRefresh()
             }
         }
+        log.info("Foreground refresh timer started with interval: \(refreshInterval) seconds")
     }
 
     private func stopForegroundRefreshTimer() {
