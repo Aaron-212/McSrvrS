@@ -48,6 +48,9 @@ struct ServerDetailView: View {
         .sheet(isPresented: $showingEditForm) {
             ServerForm(serverToEdit: server)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshThisServer)) { _ in
+            refreshServer()
+        }
     }
 
     // MARK: - Actions

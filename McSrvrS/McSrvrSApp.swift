@@ -6,6 +6,7 @@ import os
 @main
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
+    @State private var hasPerformedInitialRefresh = false
 
     private static let refreshID = "personal.aaron212.mcsrvrs.refresh"
 
@@ -28,16 +29,46 @@ struct McSrvrSApp: App {
             ContentView()
         }
         .modelContainer(sharedModelContainer)
-        #if os(iOS)
-            .backgroundTask(.appRefresh(Self.refreshID)) {
-                await handleAppRefresh()
-            }
-            .onChange(of: scenePhase) { oldPhase, newPhase in
-                if newPhase == .background {
-                    Task { await scheduleNextRefresh() }
+        .commands {
+            CommandGroup(replacing: .newItem) {
+                Button {
+                    NotificationCenter.default.post(name: .addNewServer, object: nil)
+                } label: {
+                    Label("Add New Server", systemImage: "plus")
                 }
+                .keyboardShortcut("n", modifiers: .command)
             }
+            CommandMenu("Server") {
+                Button {
+                    NotificationCenter.default.post(name: .refreshThisServer, object: nil)
+                } label: {
+                    Label("Refresh This Servers", systemImage: "arrow.trianglehead.clockwise")
+                }
+                .keyboardShortcut("r", modifiers: .command)
+
+                Button {
+                    NotificationCenter.default.post(name: .refreshAllServers, object: nil)
+                } label: {
+                    Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+            }
+        }
+        #if os(iOS)
+        .backgroundTask(.appRefresh(Self.refreshID)) {
+            await handleAppRefresh()
+        }
         #endif
+        .onChange(of: scenePhase) { oldPhase, newPhase in
+            if newPhase == .active && !hasPerformedInitialRefresh {
+                hasPerformedInitialRefresh = true
+                Task { await handleAppRefresh() }
+            } else if newPhase == .background {
+                #if os(iOS)
+                    Task { await scheduleNextRefresh() }
+                #endif
+            }
+        }
 
         #if os(macOS)
             Settings {

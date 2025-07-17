@@ -138,6 +138,9 @@ struct ContentView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         EditButton()
                     }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        SettingsView()
+                    }
                     ToolbarItemGroup(placement: .bottomBar) {
                         filterServerButton
                     }
@@ -178,7 +181,10 @@ struct ContentView: View {
             ServerForm()
                 .presentationDetents([.medium, .large])
         }
-        .onAppear {
+        .onReceive(NotificationCenter.default.publisher(for: .addNewServer)) { _ in
+            addServer()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .refreshAllServers)) { _ in
             refreshAllServers()
         }
     }
