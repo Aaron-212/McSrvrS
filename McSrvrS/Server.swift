@@ -117,40 +117,37 @@ final class Server {
 
     // MARK: - Server Status Updates
 
-    @MainActor
     func updateStatus() async {
-        // Add loading status
-        let loadingStatus = ServerStatus(server: self, state: .loading)
-        statuses.append(loadingStatus)
+        let pingResult = await JavaServerPinger.shared.ping(
+            host: host,
+            port: port
+        )
 
-        let pingResult = await JavaServerPinger.shared.ping(host: self.host, port: self.port)
-
+        let finalStatus: ServerStatus
         switch pingResult {
         case .success(let (json, latency)):
-            log.info("Ping successful: latency \(latency)ms")
-
-            let parseResult = StatusDto.parse(json)
-            switch parseResult {
+            switch StatusDto.parse(json) {
             case .success(let dto):
-                let statusData = dto.toStatusData(latency: UInt64(latency))
-                log.info("Parsed server status")
-                let successStatus = ServerStatus(server: self, state: .success(statusData))
-                statuses.append(successStatus)
-                self.lastSeenDate = .now
+                finalStatus = ServerStatus(
+                    server: self,
+                    state: .success(dto.toStatusData(latency: UInt64(latency)))
+                )
+                lastSeenDate = .now
             case .failure(let error):
-                log.error("Failed to parse server status: \(error)")
-                let errorStatus = ServerStatus(server: self, state: .error(error.localizedDescription))
-                statuses.append(errorStatus)
+                finalStatus = ServerStatus(
+                    server: self,
+                    state: .error(error.localizedDescription)
+                )
             }
         case .failure(let error):
-            print("Ping failed: \(error)")
-            let errorStatus = ServerStatus(server: self, state: .error(error.description))
-            statuses.append(errorStatus)
+            finalStatus = ServerStatus(
+                server: self,
+                state: .error(error.description)
+            )
         }
 
-        self.lastUpdatedDate = .now
+        statuses.append(finalStatus)
 
-        // Cleanup old status records periodically (every 10th update)
         if statuses.count % 10 == 0 {
             cleanupOldStatuses()
         }

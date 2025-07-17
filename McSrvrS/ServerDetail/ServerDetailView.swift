@@ -3,7 +3,7 @@ import SwiftUI
 struct ServerDetailView: View {
     let server: Server
     @State private var showingEditForm = false
-    @State private var selectedSpan: QuerySpan = .last30Days
+    @State private var selectedSpan: QuerySpan = .lastMonth
 
     var body: some View {
         ScrollView {
@@ -32,7 +32,7 @@ struct ServerDetailView: View {
             #if os(macOS)
                 ToolbarItem {
                     Button(action: refreshServer) {
-                        Label("Refresh", systemImage: "arrow.trianglehead.clockwise")
+                        Label("Refresh This Server", systemImage: "arrow.trianglehead.clockwise")
                     }
                 }
             #endif

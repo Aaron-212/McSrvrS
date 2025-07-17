@@ -62,7 +62,7 @@ struct ServerItemView: View {
                             if let lastSeenDate = server.lastSeenDate {
                                 Text("Last seen at \(lastSeenDate.formatted(date: .abbreviated, time: .shortened))")
                             } else {
-                                Text("Never seen")
+                                Text("Never seen online")
                             }
                         }
                         .font(.caption)

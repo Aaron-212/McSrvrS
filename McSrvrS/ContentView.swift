@@ -56,7 +56,7 @@ struct EmptyStateView: View {
         } else if isFiltering {
             return "All servers are currently offline"
         } else {
-            return "No servers match \"\(searchText)\""
+            return "No servers matching \"\(searchText)\""
         }
     }
 }

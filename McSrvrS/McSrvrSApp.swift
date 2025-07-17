@@ -48,7 +48,7 @@ struct McSrvrSApp: App {
                 Button {
                     NotificationCenter.default.post(name: .addNewServer, object: nil)
                 } label: {
-                    Label("Add New Server", systemImage: "plus")
+                    Label("Add Server", systemImage: "plus")
                 }
                 .keyboardShortcut("n", modifiers: .command)
             }
@@ -56,7 +56,7 @@ struct McSrvrSApp: App {
                 Button {
                     NotificationCenter.default.post(name: .refreshThisServer, object: nil)
                 } label: {
-                    Label("Refresh This Servers", systemImage: "arrow.trianglehead.clockwise")
+                    Label("Refresh This Server", systemImage: "arrow.trianglehead.clockwise")
                 }
                 .keyboardShortcut("r", modifiers: .command)
 

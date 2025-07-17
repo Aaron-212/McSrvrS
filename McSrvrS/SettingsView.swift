@@ -6,25 +6,37 @@ struct SettingsView: View {
     @AppStorage("foregroundRefreshInterval") private var refreshInterval: Double = 300  // Default: 5 minutes (300 seconds)
 
     // Predefined refresh interval options
-    private let refreshIntervalOptions: [(String, TimeInterval)] = [
-        ("30 seconds", 30),
-        ("1 minute", 60),
-        ("2 minutes", 120),
-        ("5 minutes", 300),
-        ("10 minutes", 600),
-        ("15 minutes", 900),
-        ("30 minutes", 1800),
-        ("Never", 0),
+    private let refreshIntervalOptions: [Double] = [
+        30,
+        60,
+        120,
+        300,
+        600,
+        900,
+        1800,
+        0,
     ]
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Foreground Refresh", selection: $refreshInterval) {
-                        ForEach(refreshIntervalOptions, id: \.1) { option in
-                            Text(option.0)
-                                .tag(option.1)
+                    Picker("Foreground Auto Refresh", selection: $refreshInterval) {
+                        ForEach(refreshIntervalOptions, id: \.self) { option in
+                            if option == 0 {
+                                Text("Never")
+                                    .tag(option)
+                            } else {
+                                Text(
+                                    Duration.seconds(option).formatted(
+                                        .units(
+                                            allowed: [.hours, .minutes, .seconds],
+                                            width: .wide
+                                        )
+                                    )
+                                )
+                                .tag(option)
+                            }
                         }
                     }
                     .pickerStyle(.menu)
@@ -39,24 +51,24 @@ struct SettingsView: View {
                 } header: {
                     Text("Refresh Settings")
                 } footer: {
-                    Text("Adjust how often the app checks for server updates the servers' information.")
+                    Text("Adjust how often the app updates the servers' information.")
                 }
             }
             .navigationTitle("Settings")
             .formStyle(.grouped)
             #if os(iOS)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Label("Done", systemImage: "checkmark")
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Label("Done", systemImage: "checkmark")
                             .labelStyle(.iconOnly)
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                    .buttonStyle(.borderedProminent)
                 }
-            }
-            .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(.inline)
             #endif
         }
         #if os(macOS)
