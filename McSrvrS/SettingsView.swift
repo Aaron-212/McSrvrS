@@ -56,6 +56,7 @@ struct SettingsView: View {
                     .buttonStyle(.borderedProminent)
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
             #endif
         }
         #if os(macOS)
