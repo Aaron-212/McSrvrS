@@ -11,8 +11,6 @@ struct ServerDetailStatusSection: View {
                     .foregroundStyle(.primary)
 
                 Spacer()
-
-                ConnectionStatusLabel(server: server, fontSize: .caption, fontWeight: .medium)
             }
         } content: {
             VStack(alignment: .leading, spacing: 12) {
