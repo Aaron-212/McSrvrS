@@ -29,7 +29,7 @@ struct EmptyStateView: View {
                     Label("Add Server", systemImage: "plus")
                         .font(.headline)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
             }
         }
         .padding()
@@ -52,7 +52,7 @@ struct EmptyStateView: View {
         if !hasServers {
             return "Add your first Minecraft server to get started"
         } else if isFiltering && !searchText.isEmpty {
-            return "No online servers match \"\(searchText)\""
+            return "No online servers matching \"\(searchText)\""
         } else if isFiltering {
             return "All servers are currently offline"
         } else {
@@ -63,7 +63,8 @@ struct EmptyStateView: View {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var servers: [Server]
+
+    @Query(sort: \Server.orderIndex) private var servers: [Server]
     @State private var searchText = ""
     @State private var showingServerForm = false
     @State private var showingSettings = false
@@ -126,6 +127,7 @@ struct ContentView: View {
                             }
                         }
                         .onDelete(perform: deleteServers)
+                        .onMove(perform: moveServers)
                     }
                     .listStyle(.plain)
                 }
@@ -137,12 +139,12 @@ struct ContentView: View {
             .toolbar {
                 #if os(iOS)
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        EditButton()
-                    }
-                    ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: { showingSettings = true }) {
                             Label("Settings", systemImage: "gear")
                         }
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        EditButton()
                     }
                     ToolbarItemGroup(placement: .bottomBar) {
                         filterServerButton
@@ -216,6 +218,14 @@ struct ContentView: View {
             for index in offsets {
                 modelContext.delete(filteredServers[index])
             }
+        }
+    }
+
+    private func moveServers(source: IndexSet, destination: Int) {
+        var mutableServers = servers
+        mutableServers.move(fromOffsets: source, toOffset: destination)
+        for index in 0..<mutableServers.count {
+            mutableServers[index].orderIndex = index
         }
     }
 

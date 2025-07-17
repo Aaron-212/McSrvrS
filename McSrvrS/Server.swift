@@ -7,6 +7,7 @@ import os
 final class Server {
     // Calculated
     var id: UUID
+    var orderIndex: Int
     // User defined
     var name: String
     var host: String
@@ -17,8 +18,9 @@ final class Server {
     var lastSeenDate: Date?
     var lastUpdatedDate: Date
 
-    init(name: String, host: String, port: UInt16 = 25565) {
+    init(name: String, host: String, port: UInt16 = 25565, orderIndex: Int) {
         self.id = UUID()
+        self.orderIndex = orderIndex
         self.name = name
         self.host = host
         self.port = port

@@ -63,7 +63,7 @@ struct ServerDetailView: View {
 }
 
 #Preview {
-    let server = Server(name: "Example Server", host: "mc.example.com", port: 25565)
+    let server = Server(name: "Example Server", host: "mc.example.com", port: 25565, orderIndex: 0)
     NavigationView {
         ServerDetailView(server: server)
     }

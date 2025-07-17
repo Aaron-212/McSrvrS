@@ -78,7 +78,7 @@ struct ServerForm: View {
                 }
             }
             .onAppear {
-                if let serverToEdit = serverToEdit {
+                if let serverToEdit {
                     name = serverToEdit.name
                     host = serverToEdit.host
                     port = serverToEdit.port
@@ -109,10 +109,15 @@ struct ServerForm: View {
             serverToUpdate = existingServer
         } else {
             // Create new server
+            // Get the count of existing servers for orderIndex
+            let descriptor = FetchDescriptor<Server>()
+            let serverCount = (try? modelContext.fetchCount(descriptor)) ?? 0
+
             let newServer = Server(
                 name: trimmedName,
                 host: trimmedHost,
-                port: portNumber
+                port: portNumber,
+                orderIndex: serverCount
             )
             modelContext.insert(newServer)
             serverToUpdate = newServer
