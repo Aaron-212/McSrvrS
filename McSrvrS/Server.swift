@@ -117,7 +117,11 @@ final class Server {
 
     // MARK: - Server Status Updates
 
+    @MainActor
     func updateStatus() async {
+        statuses.append(ServerStatus(server: self, state: .loading))
+        let indexOfPlaceholder = statuses.count - 1
+
         let pingResult = await JavaServerPinger.shared.ping(
             host: host,
             port: port
@@ -147,7 +151,7 @@ final class Server {
         }
 
         lastUpdatedDate = .now
-        statuses.append(finalStatus)
+        statuses[indexOfPlaceholder] = finalStatus
 
         if statuses.count % 10 == 0 {
             cleanupOldStatuses()

@@ -14,6 +14,7 @@ struct SettingsView: View {
         600,
         900,
         1800,
+        3600,
         0,
     ]
 

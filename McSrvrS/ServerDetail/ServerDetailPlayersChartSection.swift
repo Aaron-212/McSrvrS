@@ -30,6 +30,7 @@ struct ServerDetailPlayersChartSection: View {
     let server: Server
     @Binding var selectedSpan: QuerySpan
     @State private var hoverDate: Date? = nil
+    @State private var lastIndex: Int = 0
 
     var body: some View {
         let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
@@ -84,21 +85,21 @@ struct ServerDetailPlayersChartSection: View {
                 Group {
                     if hasData {
                         Chart(playerCountHistory, id: \.timestamp) { dataPoint in
-                            if let playerCount = dataPoint.playerCount {
-                                if hoverDate != nil, let dataPoint = nearestDataPoint(for: playerCountHistory) {
-                                    RuleMark(
-                                        x: .value("Time", dataPoint.timestamp)
-                                    )
-                                    .lineStyle(StrokeStyle(lineWidth: 1))
-                                    .foregroundStyle(.gray.opacity(0.5))
-                                    .annotation(
-                                        spacing: 11,
-                                        overflowResolution: .init(x: .fit, y: .disabled)
-                                    ) {
-                                        DataPointAnnotation(for: dataPoint)
-                                    }
+                            if hoverDate != nil, let dataPoint = nearestDataPoint(for: playerCountHistory) {
+                                RuleMark(
+                                    x: .value("Time", dataPoint.timestamp)
+                                )
+                                .lineStyle(StrokeStyle(lineWidth: 1))
+                                .foregroundStyle(.gray.opacity(0.5))
+                                .annotation(
+                                    spacing: 11,
+                                    overflowResolution: .init(x: .fit, y: .disabled)
+                                ) {
+                                    DataPointAnnotation(for: dataPoint)
                                 }
+                            }
 
+                            if let playerCount = dataPoint.playerCount {
                                 LineMark(
                                     x: .value("Time", dataPoint.timestamp),
                                     y: .value("Player Count", playerCount)
@@ -215,54 +216,31 @@ struct ServerDetailPlayersChartSection: View {
         guard let hoverDate else { return nil }
         guard !dataPoints.isEmpty else { return nil }
 
-        // 3) Binary-search for the closest timestamp.
-        var low = 0
-        var high = dataPoints.count - 1
-
-        while low <= high {
-            let mid = (low + high) >> 1
-            let midDate = dataPoints[mid].timestamp
-
-            if midDate == hoverDate {  // exact hit
-                return PlayerCountDataPoint(
-                    timestamp: midDate,
-                    playerCount: dataPoints[mid].playerCount
-                )
-            } else if midDate < hoverDate {  // look in the upper half
-                low = mid + 1
-            } else {  // look in the lower half
-                high = mid - 1
+        var lo = 0
+        var hi = dataPoints.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if dataPoints[mid].timestamp < hoverDate {
+                lo = mid + 1
+            } else {
+                hi = mid
             }
         }
 
-        // 4) `low` is the first index whose date is > hoverDate
-        //    `high` is the last index whose date is < hoverDate
-        switch (high, low) {
-        case (-1, _):  // hoverDate precedes the first point
-            let dp = dataPoints[low]
-            return PlayerCountDataPoint(
-                timestamp: dp.timestamp,
-                playerCount: dp.playerCount
-            )
-
-        case (_, let l) where l == dataPoints.count:  // hoverDate is after the last point
-            let dp = dataPoints[high]
-            return PlayerCountDataPoint(
-                timestamp: dp.timestamp,
-                playerCount: dp.playerCount
-            )
-
-        default:  // hoverDate lies between two points – pick the closest
-            let before = dataPoints[high]
-            let after = dataPoints[low]
-            let nearest =
-                abs(before.timestamp.timeIntervalSince(hoverDate)) < abs(after.timestamp.timeIntervalSince(hoverDate))
-                ? before : after
-            return PlayerCountDataPoint(
-                timestamp: nearest.timestamp,
-                playerCount: nearest.playerCount
-            )
+        if lo == 0 {
+            return dataPoints.first
         }
+        if lo == dataPoints.count {
+            return dataPoints.last
+        }
+
+        let prev = dataPoints[lo - 1]
+        let next = dataPoints[lo]
+
+        let diffPrev = abs(prev.timestamp.timeIntervalSince(hoverDate))
+        let diffNext = abs(next.timestamp.timeIntervalSince(hoverDate))
+
+        return diffPrev <= diffNext ? prev : next
     }
 
     private func offsetDate(for span: QuerySpan) -> Date {
