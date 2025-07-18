@@ -57,6 +57,4 @@ struct ServerDetailConnectionHistorySection: View {
         }
         .padding()
     }
-
-
 }

@@ -29,8 +29,8 @@ struct PlayerCountDataPoint {
 struct ServerDetailPlayersChartSection: View {
     let server: Server
     @Binding var selectedSpan: QuerySpan
-    @State private var hoverDate: Date? = nil
-    @State private var lastIndex: Int = 0
+    @State private var isHovering: Bool = false
+    @State private var hoverDate: Date = .now
 
     var body: some View {
         let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
@@ -76,7 +76,7 @@ struct ServerDetailPlayersChartSection: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 8)
-                    .opacity(hoverDate != nil ? 0 : 1)
+                    .opacity(isHovering ? 0 : 1)
                     .transition(.opacity)
 
                     Spacer()
@@ -85,7 +85,7 @@ struct ServerDetailPlayersChartSection: View {
                 Group {
                     if hasData {
                         Chart {
-                            if hoverDate != nil, let dataPoint = nearestDataPoint(for: playerCountHistory) {
+                            if isHovering, let dataPoint = nearestDataPoint(for: playerCountHistory) {
                                 RuleMark(
                                     x: .value("Time", dataPoint.timestamp)
                                 )
@@ -123,7 +123,7 @@ struct ServerDetailPlayersChartSection: View {
                                         )
                                     )
                                 }
-                        }
+                            }
                         }
                         .frame(height: 240)
                         .chartXScale(domain: domain)
@@ -134,9 +134,16 @@ struct ServerDetailPlayersChartSection: View {
                                 .onContinuousHover { hoverPhas in
                                     switch hoverPhas {
                                     case .active(let location):
-                                        hoverDate = proxy.value(atX: location.x, as: Date.self)
+                                        if let date: Date = proxy.value(atX: location.x, as: Date.self) {
+                                            withAnimation(.easeOut(duration: 0.2)) {
+                                                isHovering = true
+                                            }
+                                            hoverDate = date
+                                        }
                                     case .ended:
-                                        hoverDate = nil
+                                        withAnimation(.easeOut(duration: 0.2)) {
+                                            isHovering = false
+                                        }
                                     }
                                 }
                             }
@@ -153,13 +160,16 @@ struct ServerDetailPlayersChartSection: View {
                                                     atX: value.location.x,
                                                     as: Date.self
                                                 ) {
+                                                    withAnimation(.easeOut(duration: 0.2)) {
+                                                        isHovering = true
+                                                    }
                                                     hoverDate = date
-                                                } else {
-                                                    hoverDate = nil
                                                 }
                                             }
                                             .onEnded { _ in
-                                                hoverDate = nil
+                                                withAnimation(.easeOut(duration: 0.2)) {
+                                                    isHovering = false
+                                                }
                                             }
                                     )
                                 }
@@ -214,7 +224,6 @@ struct ServerDetailPlayersChartSection: View {
     }
 
     private func nearestDataPoint(for dataPoints: [PlayerCountDataPoint]) -> PlayerCountDataPoint? {
-        guard let hoverDate else { return nil }
         guard !dataPoints.isEmpty else { return nil }
 
         var lo = 0
@@ -297,7 +306,8 @@ struct ServerDetailPlayersChartSection: View {
     ) -> Int? {
         guard hasData else { return nil }
 
-        let validCounts = dataPoints
+        let validCounts =
+            dataPoints
             .filter { span.contains($0.timestamp) }
             .compactMap(\.playerCount)
 
