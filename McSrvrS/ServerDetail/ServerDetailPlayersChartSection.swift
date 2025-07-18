@@ -64,7 +64,7 @@ struct ServerDetailPlayersChartSection: View {
                             .foregroundStyle(.secondary)
                         Group {
                             if let average {
-                                Text(average, format: .number)
+                                Text("\(average)")
                             } else {
                                 Text("N/A")
                             }
@@ -89,7 +89,7 @@ struct ServerDetailPlayersChartSection: View {
                                 RuleMark(
                                     x: .value("Time", dataPoint.timestamp)
                                 )
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(.gray.secondary)
                                 .annotation(
                                     spacing: 11,
                                     overflowResolution: .init(x: .fit, y: .disabled)
@@ -198,7 +198,7 @@ struct ServerDetailPlayersChartSection: View {
                 .foregroundStyle(.secondary)
             Group {
                 if let playerCount = dataPoint.playerCount {
-                    Text(playerCount, format: .number)
+                    Text("\(playerCount)")
                 } else {
                     Text("N/A")
                 }
