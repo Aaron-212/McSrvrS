@@ -122,7 +122,7 @@ struct McSrvrSApp: App {
     #if os(iOS)
         private func scheduleNextRefresh() async {
             do {
-                var request = BGAppRefreshTaskRequest(identifier: Self.refreshID)
+                let request = BGAppRefreshTaskRequest(identifier: Self.refreshID)
                 request.earliestBeginDate = .now.addingTimeInterval(60 * 15)  // 15 mins
                 try BGTaskScheduler.shared.submit(request)
                 log.info("App-refresh scheduled")

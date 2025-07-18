@@ -29,7 +29,7 @@ struct EmptyStateView: View {
                     Label("Add Server", systemImage: "plus")
                         .font(.headline)
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
             }
         }
         .padding()
@@ -149,9 +149,11 @@ struct ContentView: View {
                     ToolbarItemGroup(placement: .bottomBar) {
                         filterServerButton
                     }
-                    ToolbarSpacer(.fixed, placement: .bottomBar)
-                    DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                    ToolbarSpacer(.fixed, placement: .bottomBar)
+                    if #available(iOS 26, *) {
+                        ToolbarSpacer(.fixed, placement: .bottomBar)
+                        DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                        ToolbarSpacer(.fixed, placement: .bottomBar)
+                    }
                     ToolbarItem(placement: .bottomBar) {
                         addServerButton
                     }
