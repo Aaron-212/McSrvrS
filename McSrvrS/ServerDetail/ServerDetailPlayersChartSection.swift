@@ -69,7 +69,7 @@ struct ServerDetailPlayersChartSection: View {
                                 Text("N/A")
                             }
                         }
-                        .font(.title2)
+                        .font(.title)
                         .bold()
                         Text(domain.description)
                             .font(.caption)
@@ -84,13 +84,12 @@ struct ServerDetailPlayersChartSection: View {
 
                 Group {
                     if hasData {
-                        Chart(playerCountHistory, id: \.timestamp) { dataPoint in
+                        Chart {
                             if hoverDate != nil, let dataPoint = nearestDataPoint(for: playerCountHistory) {
                                 RuleMark(
                                     x: .value("Time", dataPoint.timestamp)
                                 )
-                                .lineStyle(StrokeStyle(lineWidth: 1))
-                                .foregroundStyle(.gray.opacity(0.5))
+                                .foregroundStyle(.gray)
                                 .annotation(
                                     spacing: 11,
                                     overflowResolution: .init(x: .fit, y: .disabled)
@@ -99,30 +98,32 @@ struct ServerDetailPlayersChartSection: View {
                                 }
                             }
 
-                            if let playerCount = dataPoint.playerCount {
-                                LineMark(
-                                    x: .value("Time", dataPoint.timestamp),
-                                    y: .value("Player Count", playerCount)
-                                )
-
-                                AreaMark(
-                                    x: .value("Time", dataPoint.timestamp),
-                                    y: .value("Player Count", playerCount),
-                                )
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        gradient: Gradient(
-                                            colors: [
-                                                .accent.opacity(0.5),
-                                                .accent.opacity(0.2),
-                                                .accent.opacity(0.0),
-                                            ]
-                                        ),
-                                        startPoint: .top,
-                                        endPoint: .bottom
+                            ForEach(playerCountHistory, id: \.timestamp) { dataPoint in
+                                if let playerCount = dataPoint.playerCount {
+                                    LineMark(
+                                        x: .value("Time", dataPoint.timestamp),
+                                        y: .value("Player Count", playerCount)
                                     )
-                                )
-                            }
+
+                                    AreaMark(
+                                        x: .value("Time", dataPoint.timestamp),
+                                        y: .value("Player Count", playerCount),
+                                    )
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            gradient: Gradient(
+                                                colors: [
+                                                    .accent.opacity(0.5),
+                                                    .accent.opacity(0.2),
+                                                    .accent.opacity(0.0),
+                                                ]
+                                            ),
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                }
+                        }
                         }
                         .frame(height: 240)
                         .chartXScale(domain: domain)
@@ -202,7 +203,7 @@ struct ServerDetailPlayersChartSection: View {
                     Text("N/A")
                 }
             }
-            .font(.title2)
+            .font(.title)
             .bold()
             Text(dataPoint.timestamp.formatted(date: .abbreviated, time: .standard))
                 .font(.caption)
