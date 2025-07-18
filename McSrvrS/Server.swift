@@ -146,6 +146,7 @@ final class Server {
             )
         }
 
+        lastUpdatedDate = .now
         statuses.append(finalStatus)
 
         if statuses.count % 10 == 0 {

@@ -34,6 +34,8 @@ struct ServerDetailPlayersChartSection: View {
     var body: some View {
         let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
         let hasData = playerCountHistory.contains { $0.playerCount != nil }
+        let domain = domain(for: playerCountHistory)
+        let average = averagePlayerCount(hasData, for: playerCountHistory, between: domain)
 
         SectionView {
             HStack {
@@ -54,19 +56,57 @@ struct ServerDetailPlayersChartSection: View {
                 .labelsHidden()
                 .frame(maxWidth: .infinity)
 
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text("Average Player Count")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Group {
+                            if let average {
+                                Text(average, format: .number)
+                            } else {
+                                Text("N/A")
+                            }
+                        }
+                        .font(.title2)
+                        .bold()
+                        Text(domain.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                    .opacity(hoverDate != nil ? 0 : 1)
+                    .transition(.opacity)
+
+                    Spacer()
+                }
+
                 Group {
                     if hasData {
                         Chart(playerCountHistory, id: \.timestamp) { dataPoint in
                             if let playerCount = dataPoint.playerCount {
+                                if hoverDate != nil, let dataPoint = nearestDataPoint(for: playerCountHistory) {
+                                    RuleMark(
+                                        x: .value("Time", dataPoint.timestamp)
+                                    )
+                                    .lineStyle(StrokeStyle(lineWidth: 1))
+                                    .foregroundStyle(.gray.opacity(0.5))
+                                    .annotation(
+                                        spacing: 11,
+                                        overflowResolution: .init(x: .fit, y: .disabled)
+                                    ) {
+                                        DataPointAnnotation(for: dataPoint)
+                                    }
+                                }
+
                                 LineMark(
                                     x: .value("Time", dataPoint.timestamp),
-                                    y: .value("Players", playerCount)
+                                    y: .value("Player Count", playerCount)
                                 )
 
                                 AreaMark(
                                     x: .value("Time", dataPoint.timestamp),
-                                    y: .value("Players", playerCount),
-                                    series: .value("Players", "P")
+                                    y: .value("Player Count", playerCount),
                                 )
                                 .foregroundStyle(
                                     LinearGradient(
@@ -81,25 +121,10 @@ struct ServerDetailPlayersChartSection: View {
                                         endPoint: .bottom
                                     )
                                 )
-
-                                if hoverDate != nil, let dataPoint = nearestDataPoint(for: playerCountHistory) {
-                                    RuleMark(
-                                        x: .value("Time", dataPoint.timestamp)
-                                    )
-                                    .annotation {
-                                        DataPointAnnotation(for: dataPoint)
-                                    }
-
-                                }
                             }
                         }
                         .frame(height: 240)
-                        .chartXScale(
-                            domain: max(
-                                offsetDate(for: selectedSpan),
-                                playerCountHistory.first?.timestamp ?? offsetDate(for: selectedSpan)
-                            )...(playerCountHistory.last?.timestamp ?? Date())
-                        )
+                        .chartXScale(domain: domain)
                         .chartYScale(domain: 0...max(10, playerCountHistory.compactMap(\.playerCount).max() ?? 10))
                         #if os(macOS)
                             .chartOverlay { proxy in
@@ -152,27 +177,38 @@ struct ServerDetailPlayersChartSection: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-
             }
         }
         .padding()
     }
 
+    private func domain(for playerCountHistory: [PlayerCountDataPoint]) -> ClosedRange<Date> {
+        return max(
+            offsetDate(for: selectedSpan),
+            playerCountHistory.first?.timestamp ?? offsetDate(for: selectedSpan)
+        )...(playerCountHistory.last?.timestamp ?? Date())
+    }
+
     private func DataPointAnnotation(for dataPoint: PlayerCountDataPoint) -> some View {
-        VStack(spacing: 4) {
-            Text(dataPoint.timestamp.formatted(date: .numeric, time: .standard))
+        VStack(alignment: .leading) {
+            Text("Player Count")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            if let playerCount = dataPoint.playerCount {
-                Text("\(playerCount)")
-                    .font(.headline)
-            } else {
-                Text("N/A")
-                    .font(.headline)
+            Group {
+                if let playerCount = dataPoint.playerCount {
+                    Text(playerCount, format: .number)
+                } else {
+                    Text("N/A")
+                }
             }
+            .font(.title2)
+            .bold()
+            Text(dataPoint.timestamp.formatted(date: .abbreviated, time: .standard))
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .padding()
-        .background(.ultraThinMaterial, in: Capsule())
+        .padding(8)
+        .background(.background.secondary, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private func nearestDataPoint(for dataPoints: [PlayerCountDataPoint]) -> PlayerCountDataPoint? {
@@ -273,5 +309,35 @@ struct ServerDetailPlayersChartSection: View {
                 playerCount: playerCount
             )
         }
+    }
+
+    private func averagePlayerCount(
+        _ hasData: Bool,
+        for dataPoints: [PlayerCountDataPoint],
+        between span: ClosedRange<Date>
+    ) -> Int? {
+        guard hasData else { return nil }
+
+        let validCounts = dataPoints
+            .filter { span.contains($0.timestamp) }
+            .compactMap(\.playerCount)
+
+        guard !validCounts.isEmpty else { return nil }
+
+        let total = validCounts.reduce(0, +)
+        return total / validCounts.count
+    }
+}
+
+extension ClosedRange<Date> {
+    fileprivate var description: LocalizedStringResource {
+        if Calendar.current.isDate(self.lowerBound, equalTo: self.upperBound, toGranularity: .day) {
+            return
+                "\(self.lowerBound.formatted(date: .omitted, time: .standard)) to \(self.upperBound.formatted(date: .omitted, time: .standard))"
+        } else {
+            return
+                "\(self.lowerBound.formatted(date: .abbreviated, time: .omitted)) to \(self.upperBound.formatted(date: .abbreviated, time: .omitted))"
+        }
+
     }
 }

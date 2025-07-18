@@ -1,8 +1,21 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%lld" : {
-
+    "%@ to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@至%2$@"
+          }
+        }
+      }
     },
     "%u / %u" : {
       "localizations" : {
@@ -64,6 +77,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "以及%u位玩家…"
+          }
+        }
+      }
+    },
+    "Average Player Count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "平均玩家数量"
           }
         }
       }
@@ -159,7 +182,14 @@
       }
     },
     "Done" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完成"
+          }
+        }
+      }
     },
     "Edit" : {
       "localizations" : {
@@ -239,7 +269,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最后上线于%@"
+            "value" : "最后在线于%@"
           }
         }
       }
@@ -249,7 +279,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "最后上线"
+            "value" : "最后在线"
           }
         }
       }
@@ -325,7 +355,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "从未上线过"
+            "value" : "从未在线过"
           }
         }
       }
@@ -396,6 +426,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "没有找到包含“%@”的服务器"
+          }
+        }
+      }
+    },
+    "Player Count" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "玩家数量"
           }
         }
       }
