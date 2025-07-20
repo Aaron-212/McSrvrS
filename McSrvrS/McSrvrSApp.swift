@@ -43,7 +43,8 @@ struct McSrvrSApp: App {
                 }
         }
         .modelContainer(sharedModelContainer)
-        .commands {
+        .commandsReplaced {
+            SidebarCommands()
             CommandGroup(replacing: .newItem) {
                 Button {
                     NotificationCenter.default.post(name: .addNewServer, object: nil)
@@ -52,14 +53,15 @@ struct McSrvrSApp: App {
                 }
                 .keyboardShortcut("n", modifiers: .command)
             }
-            CommandMenu("Server") {
+            CommandGroup(after: .newItem) {
                 Button {
                     NotificationCenter.default.post(name: .refreshThisServer, object: nil)
                 } label: {
                     Label("Refresh This Server", systemImage: "arrow.trianglehead.clockwise")
                 }
                 .keyboardShortcut("r", modifiers: .command)
-
+            }
+            CommandGroup(after: .newItem) {
                 Button {
                     NotificationCenter.default.post(name: .refreshAllServers, object: nil)
                 } label: {

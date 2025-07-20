@@ -63,6 +63,7 @@ struct EmptyStateView: View {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @Query(sort: \Server.orderIndex) private var servers: [Server]
     @State private var searchText = ""
@@ -138,29 +139,38 @@ struct ContentView: View {
             #endif
             .toolbar {
                 #if os(iOS)
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: { showingSettings = true }) {
-                            Label("Settings", systemImage: "gear")
+                    if horizontalSizeClass == .compact{
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button(action: { showingSettings = true }) {
+                                Label("Settings", systemImage: "gear")
+                            }
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            EditButton()
+                        }
+                        ToolbarItemGroup(placement: .bottomBar) {
+                            filterServerButton
+                        }
+                        ToolbarSpacer(.fixed, placement: .bottomBar)
+                        DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                        ToolbarSpacer(.fixed, placement: .bottomBar)
+                        ToolbarItem(placement: .bottomBar) {
+                            addServerButton
+                        }
+                    } else {
+                        ToolbarItem(placement: .automatic) {
+                            Button(action: refreshAllServers) {
+                                Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
+                            }
+                        }
+                        ToolbarItem(placement: .automatic) {
+                            filterServerButton
+                        }
+                        ToolbarItem(placement: .automatic) {
+                            addServerButton
                         }
                     }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        EditButton()
-                    }
-                    ToolbarItemGroup(placement: .bottomBar) {
-                        filterServerButton
-                    }
-                    ToolbarSpacer(.fixed, placement: .bottomBar)
-                    DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                    ToolbarSpacer(.fixed, placement: .bottomBar)
-                    ToolbarItem(placement: .bottomBar) {
-                        addServerButton
-                    }
-                #elseif os(macOS)
-                    ToolbarItem(placement: .automatic) {
-                        Button(action: refreshAllServers) {
-                            Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
-                        }
-                    }
+                #else
                     ToolbarItem(placement: .automatic) {
                         filterServerButton
                     }

@@ -7,7 +7,7 @@ enum QuerySpan: CaseIterable {
     case lastWeek
     case lastMonth
     case lastQuarter
-    case lastYear  // all data
+    case lastYear
 
     var description: LocalizedStringResource {
         switch self {
@@ -288,7 +288,6 @@ struct ServerDetailPlayersChartSection: View {
             {
                 playerCount = Int(players.online)
             } else {
-                // Failed status - pass nil to show gap in chart
                 playerCount = nil
             }
 
@@ -327,6 +326,5 @@ extension ClosedRange<Date> {
             return
                 "\(self.lowerBound.formatted(date: .abbreviated, time: .omitted)) to \(self.upperBound.formatted(date: .abbreviated, time: .omitted))"
         }
-
     }
 }
