@@ -1,0 +1,64 @@
+name: "CodeQL"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "**/*.md"
+
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - "**/*.md"
+
+jobs:
+  analyze:
+    name: Analyze Swift
+    runs-on: "macos-15-arm64"
+    timeout-minutes: 120
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-Swift
+      cancel-in-progress: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: swift
+            build-mode: manual
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: Swift
+
+      - name: Set up Xcode 26 Beta
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 26.0-beta
+
+      - name: Download iOS 26 Beta Simulator
+        shell: bash
+        run: |
+          xcodebuild -downloadPlatform iOS -buildVersion 26.0 -architectureVariant arm64
+
+      - name: Build Manually
+        shell: bash
+        run: |
+          xcodebuild -project McSrvrS.xcodeproj -scheme McSrvrS -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.0'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:Swift"
