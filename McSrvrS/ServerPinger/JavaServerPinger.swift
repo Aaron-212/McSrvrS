@@ -3,7 +3,7 @@ import Network
 import os
 
 // A dedicated service for handling Minecraft Server List Ping
-actor JavaServerPinger {
+actor JavaServerPinger: ServerPinger {
     static let shared = JavaServerPinger()
     let log: Logger
 
@@ -11,28 +11,8 @@ actor JavaServerPinger {
         self.log = Logger(subsystem: "personal.aaron212.mcsrv", category: "JavaServerPinger")
     }
 
-    enum PingerError: Error {
-        case connectionFailed(Error)
-        case timedOut
-        case dataError(String)
-        case encodingError
-
-        public var description: String {
-            switch self {
-            case .connectionFailed(let error):
-                return "Connection failed: \(error.localizedDescription)"
-            case .timedOut:
-                return "The ping operation timed out."
-            case .dataError(let details):
-                return "Data parsing error: \(details)"
-            case .encodingError:
-                return "Failed to encode data for ping operation."
-            }
-        }
-    }
-
     // Main ping function that returns (JSON string, latency in ms)
-    func ping(host: String, port: UInt16) async -> Result<(String, Int), PingerError> {
+    func ping(host: String, port: UInt16) async -> Result<(String, Int), ServerPingerError> {
         let tcpOptions = NWProtocolTCP.Options()
         tcpOptions.connectionTimeout = 5
         tcpOptions.connectionDropTime = 5
@@ -55,7 +35,7 @@ actor JavaServerPinger {
                         } catch {
                             connection.cancel()
                             continuation.resume(
-                                returning: .failure(error as? PingerError ?? .dataError("Unknown error"))
+                                returning: .failure(error as? ServerPingerError ?? .dataError("Unknown error"))
                             )
                         }
                     }
@@ -129,7 +109,7 @@ actor JavaServerPinger {
         let data = try await readPacket(connection: connection, extraVarint: true)
 
         guard let jsonString = String(data: data, encoding: .utf8) else {
-            throw PingerError.encodingError
+            throw ServerPingerError.encodingError
         }
 
         return jsonString
@@ -168,7 +148,7 @@ actor JavaServerPinger {
                 content: packet,
                 completion: .contentProcessed { error in
                     if let error = error {
-                        continuation.resume(throwing: PingerError.connectionFailed(error))
+                        continuation.resume(throwing: ServerPingerError.connectionFailed(error))
                     } else {
                         continuation.resume()
                     }
@@ -210,11 +190,11 @@ actor JavaServerPinger {
         return try await withCheckedThrowingContinuation { continuation in
             connection.receive(minimumIncompleteLength: count, maximumLength: count) { data, _, isComplete, error in
                 if let error = error {
-                    continuation.resume(throwing: PingerError.connectionFailed(error))
+                    continuation.resume(throwing: ServerPingerError.connectionFailed(error))
                 } else if let data = data, data.count == count {
                     continuation.resume(returning: data)
                 } else {
-                    continuation.resume(throwing: PingerError.dataError("Incomplete data received"))
+                    continuation.resume(throwing: ServerPingerError.dataError("Incomplete data received"))
                 }
             }
         }
