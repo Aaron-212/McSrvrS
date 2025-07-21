@@ -122,7 +122,10 @@ actor JavaServerPinger: ServerPinger {
                     Task {
                         do {
                             let statusData = try await self.performPing(
-                                connection: connection, host: host, port: port)
+                                connection: connection,
+                                host: host,
+                                port: port
+                            )
                             connection.cancel()
                             continuation.resume(returning: .success(statusData))
                         } catch {
@@ -133,7 +136,8 @@ actor JavaServerPinger: ServerPinger {
                 case .failed(let error):
                     connection.cancel()
                     continuation.resume(
-                        returning: .failure(ServerPingerError.connectionFailed(error)))
+                        returning: .failure(ServerPingerError.connectionFailed(error))
+                    )
                 case .cancelled:
                     break
                 default:
@@ -173,7 +177,8 @@ actor JavaServerPinger: ServerPinger {
         case .failure(let error):
             log.error("Failed to parse status JSON: \(error.localizedDescription)")
             throw ServerPingerError.dataError(
-                "Failed to parse status JSON: \(error.localizedDescription)")
+                "Failed to parse status JSON: \(error.localizedDescription)"
+            )
         }
     }
 
@@ -293,14 +298,18 @@ actor JavaServerPinger: ServerPinger {
     private func readBytes(connection: NWConnection, count: Int) async throws -> Data {
         return try await withCheckedThrowingContinuation { continuation in
             connection.receive(minimumIncompleteLength: count, maximumLength: count) {
-                data, _, isComplete, error in
+                data,
+                _,
+                isComplete,
+                error in
                 if let error = error {
                     continuation.resume(throwing: ServerPingerError.connectionFailed(error))
                 } else if let data = data, data.count == count {
                     continuation.resume(returning: data)
                 } else {
                     continuation.resume(
-                        throwing: ServerPingerError.dataError("Incomplete data received"))
+                        throwing: ServerPingerError.dataError("Incomplete data received")
+                    )
                 }
             }
         }
