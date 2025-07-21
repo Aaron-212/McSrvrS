@@ -70,6 +70,7 @@ final class Server {
                 server: self,
                 state: .success(statusData)
             )
+            lastSeenDate = .now
         case .failure(let error):
             finalStatus = ServerStatus(
                 server: self,

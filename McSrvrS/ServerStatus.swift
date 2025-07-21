@@ -72,24 +72,6 @@ final class ServerStatus {
             self.name = name
             self.playerId = playerId
         }
-
-        enum CodingKeys: String, CodingKey {
-            case name
-            case playerId = "id"
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            self.id = UUID()
-            self.name = try container.decode(String.self, forKey: .name)
-            self.playerId = try container.decode(String.self, forKey: .playerId)
-        }
-
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(name, forKey: .name)
-            try container.encode(playerId, forKey: .playerId)
-        }
     }
 
     struct Players: Codable {

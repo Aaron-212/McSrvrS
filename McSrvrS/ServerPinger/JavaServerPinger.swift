@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import SwiftData
 import os
 
 // A dedicated service for handling Minecraft Server List Ping
@@ -11,9 +12,37 @@ actor JavaServerPinger: ServerPinger {
         self.log = Logger(subsystem: "personal.aaron212.mcsrv", category: "JavaServerPinger")
     }
 
+    private struct PlayerDto: Codable {
+        let name: String
+        let playerId: String
+
+        enum CodingKeys: String, CodingKey {
+            case name
+            case playerId = "id"
+        }
+
+        func toPlayer() -> ServerStatus.Player {
+            return ServerStatus.Player(name: name, playerId: playerId)
+        }
+    }
+
+    private struct PlayersDto: Codable {
+        let max: UInt32
+        let online: UInt32
+        let sample: [PlayerDto]?
+
+        func toPlayers() -> ServerStatus.Players {
+            return ServerStatus.Players(
+                max: max,
+                online: online,
+                sample: sample?.map { $0.toPlayer() }
+            )
+        }
+    }
+
     private struct JavaStatusDto: Codable {
         let version: ServerStatus.Version
-        let players: ServerStatus.Players?
+        let players: PlayersDto?
         let motd: String?
         let favicon: String?
 
@@ -26,7 +55,7 @@ actor JavaServerPinger: ServerPinger {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
             version = try container.decode(ServerStatus.Version.self, forKey: .version)
-            players = try container.decode(ServerStatus.Players.self, forKey: .players)
+            players = try container.decodeIfPresent(PlayersDto.self, forKey: .players)
             favicon = try container.decodeIfPresent(String.self, forKey: .favicon)
 
             // Handle motd which can be either string or object with text field
@@ -52,7 +81,7 @@ actor JavaServerPinger: ServerPinger {
         func toStatusData(latency: UInt64?) -> ServerStatus.StatusData {
             return ServerStatus.StatusData(
                 version: version,
-                players: players,
+                players: players?.toPlayers(),
                 motd: motd,
                 favicon: favicon,
                 latency: latency
@@ -73,7 +102,9 @@ actor JavaServerPinger: ServerPinger {
         }
     }
 
-    func ping(host: String, port: UInt16) async -> Result<ServerStatus.StatusData, ServerPingerError> {
+    func ping(host: String, port: UInt16) async -> Result<
+        ServerStatus.StatusData, ServerPingerError
+    > {
         let tcpOptions = NWProtocolTCP.Options()
         tcpOptions.connectionTimeout = 5
         tcpOptions.connectionDropTime = 5
@@ -90,7 +121,8 @@ actor JavaServerPinger: ServerPinger {
                 case .ready:
                     Task {
                         do {
-                            let statusData = try await self.performPing(connection: connection, host: host, port: port)
+                            let statusData = try await self.performPing(
+                                connection: connection, host: host, port: port)
                             connection.cancel()
                             continuation.resume(returning: .success(statusData))
                         } catch {
@@ -100,7 +132,8 @@ actor JavaServerPinger: ServerPinger {
                     }
                 case .failed(let error):
                     connection.cancel()
-                    continuation.resume(returning: .failure(ServerPingerError.connectionFailed(error)))
+                    continuation.resume(
+                        returning: .failure(ServerPingerError.connectionFailed(error)))
                 case .cancelled:
                     break
                 default:
@@ -139,7 +172,8 @@ actor JavaServerPinger: ServerPinger {
             return dto.toStatusData(latency: UInt64(latency))
         case .failure(let error):
             log.error("Failed to parse status JSON: \(error.localizedDescription)")
-            throw ServerPingerError.dataError("Failed to parse status JSON: \(error.localizedDescription)")
+            throw ServerPingerError.dataError(
+                "Failed to parse status JSON: \(error.localizedDescription)")
         }
     }
 
@@ -212,7 +246,8 @@ actor JavaServerPinger: ServerPinger {
         packet.append(packVarint(data.count))  // Length prefix
         packet.append(data)
 
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+        try await withCheckedThrowingContinuation {
+            (continuation: CheckedContinuation<Void, Error>) in
             connection.send(
                 content: packet,
                 completion: .contentProcessed { error in
@@ -257,13 +292,15 @@ actor JavaServerPinger: ServerPinger {
     // Read exact number of bytes
     private func readBytes(connection: NWConnection, count: Int) async throws -> Data {
         return try await withCheckedThrowingContinuation { continuation in
-            connection.receive(minimumIncompleteLength: count, maximumLength: count) { data, _, isComplete, error in
+            connection.receive(minimumIncompleteLength: count, maximumLength: count) {
+                data, _, isComplete, error in
                 if let error = error {
                     continuation.resume(throwing: ServerPingerError.connectionFailed(error))
                 } else if let data = data, data.count == count {
                     continuation.resume(returning: data)
                 } else {
-                    continuation.resume(throwing: ServerPingerError.dataError("Incomplete data received"))
+                    continuation.resume(
+                        throwing: ServerPingerError.dataError("Incomplete data received"))
                 }
             }
         }
