@@ -50,7 +50,7 @@ jobs:
       - name: Download iOS 26 Beta Simulator
         shell: bash
         run: |
-          xcodebuild -downloadPlatform iOS -buildVersion 26.0 -architectureVariant arm64
+          xcodebuild -downloadPlatform iOS
 
       - name: Build Manually
         shell: bash
