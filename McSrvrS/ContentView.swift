@@ -139,7 +139,7 @@ struct ContentView: View {
             #endif
             .toolbar {
                 #if os(iOS)
-                    if horizontalSizeClass == .compact{
+                    if horizontalSizeClass == .compact {
                         ToolbarItem(placement: .navigationBarTrailing) {
                             Button(action: { showingSettings = true }) {
                                 Label("Settings", systemImage: "gear")
@@ -159,11 +159,6 @@ struct ContentView: View {
                         }
                     } else {
                         ToolbarItem(placement: .automatic) {
-                            Button(action: refreshAllServers) {
-                                Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
-                            }
-                        }
-                        ToolbarItem(placement: .automatic) {
                             filterServerButton
                         }
                         ToolbarItem(placement: .automatic) {
@@ -171,6 +166,11 @@ struct ContentView: View {
                         }
                     }
                 #else
+                    ToolbarItem(placement: .automatic) {
+                        Button(action: refreshAllServers) {
+                            Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
+                        }
+                    }
                     ToolbarItem(placement: .automatic) {
                         filterServerButton
                     }
