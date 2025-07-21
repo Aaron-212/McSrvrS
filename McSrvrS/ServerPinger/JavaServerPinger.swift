@@ -11,8 +11,69 @@ actor JavaServerPinger: ServerPinger {
         self.log = Logger(subsystem: "personal.aaron212.mcsrv", category: "JavaServerPinger")
     }
 
-    // Main ping function that returns (JSON string, latency in ms)
-    func ping(host: String, port: UInt16) async -> Result<(String, Int), ServerPingerError> {
+    private struct JavaStatusDto: Codable {
+        let version: ServerStatus.Version
+        let players: ServerStatus.Players?
+        let motd: String?
+        let favicon: String?
+
+        enum CodingKeys: String, CodingKey {
+            case version, players, favicon
+            case motd = "description"
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+
+            version = try container.decode(ServerStatus.Version.self, forKey: .version)
+            players = try container.decode(ServerStatus.Players.self, forKey: .players)
+            favicon = try container.decodeIfPresent(String.self, forKey: .favicon)
+
+            // Handle motd which can be either string or object with text field
+            if let motdString = try? container.decode(String.self, forKey: .motd) {
+                motd = motdString
+            } else if let motdObject = try? container.decode([String: String].self, forKey: .motd),
+                let text = motdObject["text"]
+            {
+                motd = text
+            } else {
+                motd = nil
+            }
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(version, forKey: .version)
+            try container.encode(players, forKey: .players)
+            try container.encode(motd, forKey: .motd)
+            try container.encodeIfPresent(favicon, forKey: .favicon)
+        }
+
+        func toStatusData(latency: UInt64?) -> ServerStatus.StatusData {
+            return ServerStatus.StatusData(
+                version: version,
+                players: players,
+                motd: motd,
+                favicon: favicon,
+                latency: latency
+            )
+        }
+
+        static func parse(_ jsonString: String) -> Result<Self, Error> {
+            guard let data = jsonString.data(using: .utf8) else {
+                return .failure(NSError(domain: "InvalidString", code: 1, userInfo: nil))
+            }
+
+            do {
+                let dto = try JSONDecoder().decode(Self.self, from: data)
+                return .success(dto)
+            } catch {
+                return .failure(error)
+            }
+        }
+    }
+
+    func ping(host: String, port: UInt16) async -> Result<ServerStatus.StatusData, ServerPingerError> {
         let tcpOptions = NWProtocolTCP.Options()
         tcpOptions.connectionTimeout = 5
         tcpOptions.connectionDropTime = 5
@@ -29,19 +90,17 @@ actor JavaServerPinger: ServerPinger {
                 case .ready:
                     Task {
                         do {
-                            let result = try await self.performPing(connection: connection, host: host, port: port)
+                            let statusData = try await self.performPing(connection: connection, host: host, port: port)
                             connection.cancel()
-                            continuation.resume(returning: .success(result))
+                            continuation.resume(returning: .success(statusData))
                         } catch {
                             connection.cancel()
-                            continuation.resume(
-                                returning: .failure(error as? ServerPingerError ?? .dataError("Unknown error"))
-                            )
+                            continuation.resume(returning: .failure(error as! ServerPingerError))
                         }
                     }
                 case .failed(let error):
                     connection.cancel()
-                    continuation.resume(returning: .failure(.connectionFailed(error)))
+                    continuation.resume(returning: .failure(ServerPingerError.connectionFailed(error)))
                 case .cancelled:
                     break
                 default:
@@ -54,7 +113,9 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Perform the complete ping sequence
-    private func performPing(connection: NWConnection, host: String, port: UInt16) async throws -> (String, Int) {
+    private func performPing(connection: NWConnection, host: String, port: UInt16) async throws
+        -> ServerStatus.StatusData
+    {
         // Send handshake packet
         try await sendHandshake(connection: connection, host: host, port: port)
         log.debug("Handshake sent to \(host):\(port)")
@@ -71,7 +132,15 @@ actor JavaServerPinger: ServerPinger {
         let latency = try await sendPingAndMeasureLatency(connection: connection)
         log.debug("Ping response received from \(host):\(port) with latency \(latency) ms")
 
-        return (jsonString, latency)
+        // Parse the JSON response
+        switch JavaStatusDto.parse(jsonString) {
+        case .success(let dto):
+            log.info("Ping successful for \(host):\(port)")
+            return dto.toStatusData(latency: UInt64(latency))
+        case .failure(let error):
+            log.error("Failed to parse status JSON: \(error.localizedDescription)")
+            throw ServerPingerError.dataError("Failed to parse status JSON: \(error.localizedDescription)")
+        }
     }
 
     // Send handshake packet

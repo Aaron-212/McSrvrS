@@ -27,70 +27,6 @@ final class Server {
         self.lastUpdatedDate = Date.now
     }
 
-    // MARK: - External DTO (JSON Parsing)
-
-    private struct StatusDto: Codable {
-        let version: ServerStatus.Version
-        let players: ServerStatus.Players?
-        let motd: String?
-        let favicon: String?
-
-        enum CodingKeys: String, CodingKey {
-            case version, players, favicon
-            case motd = "description"
-        }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-
-            version = try container.decode(ServerStatus.Version.self, forKey: .version)
-            players = try container.decode(ServerStatus.Players.self, forKey: .players)
-            favicon = try container.decodeIfPresent(String.self, forKey: .favicon)
-
-            // Handle motd which can be either string or object with text field
-            if let motdString = try? container.decode(String.self, forKey: .motd) {
-                motd = motdString
-            } else if let motdObject = try? container.decode([String: String].self, forKey: .motd),
-                let text = motdObject["text"]
-            {
-                motd = text
-            } else {
-                motd = nil
-            }
-        }
-
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encode(version, forKey: .version)
-            try container.encode(players, forKey: .players)
-            try container.encode(motd, forKey: .motd)
-            try container.encodeIfPresent(favicon, forKey: .favicon)
-        }
-
-        func toStatusData(latency: UInt64?) -> ServerStatus.StatusData {
-            return ServerStatus.StatusData(
-                version: version,
-                players: players,
-                motd: motd,
-                favicon: favicon,
-                latency: latency
-            )
-        }
-
-        static func parse(_ jsonString: String) -> Result<StatusDto, Error> {
-            guard let data = jsonString.data(using: .utf8) else {
-                return .failure(NSError(domain: "InvalidString", code: 1, userInfo: nil))
-            }
-
-            do {
-                let dto = try JSONDecoder().decode(StatusDto.self, from: data)
-                return .success(dto)
-            } catch {
-                return .failure(error)
-            }
-        }
-    }
-
     var addressDescription: String {
         if self.host.contains(":") {
             // probably an IPv6 address
@@ -121,28 +57,19 @@ final class Server {
     func updateStatus() async {
         statuses.append(ServerStatus(server: self, state: .loading))
         let indexOfPlaceholder = statuses.count - 1
+        let finalStatus: ServerStatus
 
         let pingResult = await JavaServerPinger.shared.ping(
             host: host,
             port: port
         )
 
-        let finalStatus: ServerStatus
         switch pingResult {
-        case .success(let (json, latency)):
-            switch StatusDto.parse(json) {
-            case .success(let dto):
-                finalStatus = ServerStatus(
-                    server: self,
-                    state: .success(dto.toStatusData(latency: UInt64(latency)))
-                )
-                lastSeenDate = .now
-            case .failure(let error):
-                finalStatus = ServerStatus(
-                    server: self,
-                    state: .error(error.localizedDescription)
-                )
-            }
+        case .success(let statusData):
+            finalStatus = ServerStatus(
+                server: self,
+                state: .success(statusData)
+            )
         case .failure(let error):
             finalStatus = ServerStatus(
                 server: self,
