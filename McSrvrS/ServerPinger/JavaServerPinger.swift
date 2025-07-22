@@ -21,8 +21,8 @@ actor JavaServerPinger: ServerPinger {
             case playerId = "id"
         }
 
-        func toPlayer() -> ServerStatus.Player {
-            return ServerStatus.Player(name: name, playerId: playerId)
+        func toPlayer() async -> ServerStatus.Player {
+            return await ServerStatus.Player(name: name, playerId: playerId)
         }
     }
 
@@ -31,11 +31,23 @@ actor JavaServerPinger: ServerPinger {
         let online: UInt32
         let sample: [PlayerDto]?
 
-        func toPlayers() -> ServerStatus.Players {
+        func toPlayers() async -> ServerStatus.Players {
+            let convertedSample: [ServerStatus.Player]? = await {
+                guard let sample else { return nil }
+
+                var result = [ServerStatus.Player]()
+                result.reserveCapacity(sample.count)
+
+                for s in sample {
+                    result.append(await s.toPlayer())
+                }
+                return result
+            }()
+
             return ServerStatus.Players(
                 max: max,
                 online: online,
-                sample: sample?.map { $0.toPlayer() }
+                sample: convertedSample
             )
         }
     }
@@ -78,10 +90,10 @@ actor JavaServerPinger: ServerPinger {
             try container.encodeIfPresent(favicon, forKey: .favicon)
         }
 
-        func toStatusData(latency: UInt64?) -> ServerStatus.StatusData {
+        func toStatusData(latency: UInt64?) async -> ServerStatus.StatusData {
             return ServerStatus.StatusData(
                 version: version,
-                players: players?.toPlayers(),
+                players: await players?.toPlayers(),
                 motd: motd,
                 favicon: favicon,
                 latency: latency
@@ -173,7 +185,7 @@ actor JavaServerPinger: ServerPinger {
         switch JavaStatusDto.parse(jsonString) {
         case .success(let dto):
             log.info("Ping successful for \(host):\(port)")
-            return dto.toStatusData(latency: UInt64(latency))
+            return await dto.toStatusData(latency: UInt64(latency))
         case .failure(let error):
             log.error("Failed to parse status JSON: \(error.localizedDescription)")
             throw ServerPingerError.dataError(

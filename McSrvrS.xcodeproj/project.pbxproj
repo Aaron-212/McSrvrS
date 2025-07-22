@@ -17,9 +17,9 @@
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		8DED9FD02E27856D00BB7DD6 /* Exceptions for "McSrvrS" folder in "McSrvrS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			platformFiltersByRelativePath = {
-				Info.plist = (macos, );
-			};
+			membershipExceptions = (
+				Info.plist,
+			);
 			target = 8D5E8D402E20BCBF007603B3 /* McSrvrS */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
