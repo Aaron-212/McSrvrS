@@ -5,7 +5,6 @@ struct ServerItemView: View {
 
     var body: some View {
         HStack {
-            // Server Icon
             server.faviconView
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 12))

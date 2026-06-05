@@ -1,66 +1,6 @@
 import SwiftData
 import SwiftUI
 
-struct EmptyStateView: View {
-    let hasServers: Bool
-    let isFiltering: Bool
-    let searchText: String
-    let addServerAction: () -> Void
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: hasServers ? "magnifyingglass" : "server.rack")
-                .font(.largeTitle)
-                .foregroundStyle(.tertiary)
-
-            VStack {
-                Text(titleText)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text(subtitleText)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            if !hasServers {
-                Button(action: addServerAction) {
-                    Label("Add Server", systemImage: "plus")
-                        .font(.headline)
-                }
-                .buttonStyle(.glassProminent)
-            }
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var titleText: LocalizedStringResource {
-        if !hasServers {
-            return "No Servers Added"
-        } else if isFiltering && !searchText.isEmpty {
-            return "No Results"
-        } else if isFiltering {
-            return "No Online Servers"
-        } else {
-            return "No Results"
-        }
-    }
-
-    private var subtitleText: LocalizedStringResource {
-        if !hasServers {
-            return "Add your first Minecraft server to get started"
-        } else if isFiltering && !searchText.isEmpty {
-            return "No online servers matching \"\(searchText)\""
-        } else if isFiltering {
-            return "All servers are currently offline"
-        } else {
-            return "No servers matching \"\(searchText)\""
-        }
-    }
-}
-
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -69,10 +9,10 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingServerForm = false
     @State private var showingSettings = false
-    @State private var isFiltering = false
+    @State private var showsOnlineOnly = false
 
     private var filteredServers: [Server] {
-        let searchFiltered =
+        let matchingServers =
             searchText.isEmpty
             ? servers
             : servers.filter { server in
@@ -80,12 +20,12 @@ struct ContentView: View {
                     || server.addressDescription.localizedCaseInsensitiveContains(searchText)
             }
 
-        if !isFiltering {
-            return searchFiltered
-        } else {
-            return searchFiltered.filter { server in
-                server.isOnline
-            }
+        guard showsOnlineOnly else {
+            return matchingServers
+        }
+
+        return matchingServers.filter { server in
+            server.isOnline
         }
     }
 
@@ -93,21 +33,9 @@ struct ContentView: View {
         NavigationSplitView {
             Group {
                 if servers.isEmpty {
-                    // Fallback view when no servers exist
-                    EmptyStateView(
-                        hasServers: false,
-                        isFiltering: isFiltering,
-                        searchText: searchText,
-                        addServerAction: addServer
-                    )
+                    unavailableContent(hasServers: false)
                 } else if filteredServers.isEmpty {
-                    // Fallback view when servers exist but filtered results are empty
-                    EmptyStateView(
-                        hasServers: true,
-                        isFiltering: isFiltering,
-                        searchText: searchText,
-                        addServerAction: addServer
-                    )
+                    unavailableContent(hasServers: true)
                 } else {
                     List {
                         ForEach(filteredServers) { server in
@@ -191,7 +119,7 @@ struct ContentView: View {
                     .navigationSplitViewColumnWidth(min: 320, ideal: 400)
                 #endif
         }
-        .searchable(text: $searchText, prompt: "Search Servers")
+        .searchable(text: $searchText, placement: .sidebar, prompt: "Search Servers")
         .sheet(isPresented: $showingServerForm) {
             ServerForm()
                 .presentationDetents([.medium, .large])
@@ -208,7 +136,7 @@ struct ContentView: View {
     }
 
     private var filterServerButton: some View {
-        Toggle(isOn: $isFiltering) {
+        Toggle(isOn: $showsOnlineOnly) {
             Label("Filter Servers", systemImage: "line.3.horizontal.decrease")
         }
     }
@@ -216,6 +144,50 @@ struct ContentView: View {
     private var addServerButton: some View {
         Button(action: addServer) {
             Label("Add Server", systemImage: "plus")
+        }
+    }
+
+    private func unavailableContent(hasServers: Bool) -> some View {
+        ContentUnavailableView {
+            Label(
+                unavailableContentTitle(hasServers: hasServers),
+                systemImage: hasServers ? "magnifyingglass" : "server.rack"
+            )
+        } description: {
+            Text(unavailableContentDescription(hasServers: hasServers))
+        } actions: {
+            if !hasServers {
+                Button(action: addServer) {
+                    Label("Add Server", systemImage: "plus")
+                }
+                .buttonStyle(.glassProminent)
+                .buttonBorderShape(.capsule)
+                .controlSize(.large)
+            }
+        }
+    }
+
+    private func unavailableContentTitle(hasServers: Bool) -> LocalizedStringResource {
+        if !hasServers {
+            return "No Servers Added"
+        } else if showsOnlineOnly && !searchText.isEmpty {
+            return "No Results"
+        } else if showsOnlineOnly {
+            return "No Online Servers"
+        } else {
+            return "No Results"
+        }
+    }
+
+    private func unavailableContentDescription(hasServers: Bool) -> LocalizedStringResource {
+        if !hasServers {
+            return "Add your first Minecraft server to get started"
+        } else if showsOnlineOnly && !searchText.isEmpty {
+            return "No online servers matching \"\(searchText)\""
+        } else if showsOnlineOnly {
+            return "All servers are currently offline"
+        } else {
+            return "No servers matching \"\(searchText)\""
         }
     }
 
@@ -232,10 +204,19 @@ struct ContentView: View {
     }
 
     private func moveServers(source: IndexSet, destination: Int) {
-        var mutableServers = servers
-        mutableServers.move(fromOffsets: source, toOffset: destination)
-        for index in 0..<mutableServers.count {
-            mutableServers[index].orderIndex = index
+        var reorderedVisibleServers = filteredServers
+        reorderedVisibleServers.move(fromOffsets: source, toOffset: destination)
+
+        let visibleServerIDs = Set(filteredServers.map(\.id))
+        var visibleServerIterator = reorderedVisibleServers.makeIterator()
+        let reorderedServers = servers.map { server in
+            visibleServerIDs.contains(server.id)
+                ? (visibleServerIterator.next() ?? server)
+                : server
+        }
+
+        for (index, server) in reorderedServers.enumerated() {
+            server.orderIndex = index
         }
     }
 

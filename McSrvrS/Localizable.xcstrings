@@ -31,9 +31,6 @@
       },
       "shouldTranslate" : false
     },
-    "25565" : {
-      "shouldTranslate" : false
-    },
     "Add Server" : {
       "localizations" : {
         "zh-Hans" : {
@@ -225,7 +222,7 @@
       }
     },
     "example.net" : {
-      "shouldTranslate" : false
+
     },
     "Filter Servers" : {
       "localizations" : {
@@ -483,7 +480,7 @@
         }
       }
     },
-    "Quater" : {
+    "Quarter" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

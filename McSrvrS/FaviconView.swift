@@ -44,14 +44,12 @@ struct FaviconView: View {
     }
 }
 
-// Convenience extension for ServerStatus.StatusData
 extension ServerStatus.StatusData {
     var faviconView: some View {
         FaviconView(serverState: .success(self))
     }
 }
 
-// Convenience extension for Server
 extension Server {
     var faviconView: some View {
         FaviconView(serverState: self.currentState)

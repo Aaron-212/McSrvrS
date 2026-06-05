@@ -3,26 +3,24 @@ import SwiftUI
 struct ServerDetailView: View {
     let server: Server
     @State private var showingEditForm = false
-    @State private var selectedSpan: QuerySpan = .lastMonth
+    @State private var selectedHistorySpan: PlayerHistorySpan = .lastMonth
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Header Section
                 ServerDetailHeaderSection(server: server)
 
-                // Server Status Section
                 ServerDetailStatusSection(server: server)
 
-                // Players Section (if available)
                 if case .success(let statusData) = server.currentState {
                     ServerDetailPlayersSection(statusData: statusData)
                 }
 
-                // Players Chart Section
-                ServerDetailPlayersChartSection(server: server, selectedSpan: $selectedSpan)
+                ServerDetailPlayersChartSection(
+                    server: server,
+                    selectedSpan: $selectedHistorySpan
+                )
 
-                // Connection History Section
                 ServerDetailConnectionHistorySection(server: server)
             }
             .padding(.horizontal, 20)
@@ -46,7 +44,7 @@ struct ServerDetailView: View {
             refreshServer()
         }
         .sheet(isPresented: $showingEditForm) {
-            ServerForm(serverToEdit: server)
+            ServerForm(editingServer: server)
         }
         .onReceive(NotificationCenter.default.publisher(for: .refreshThisServer)) { _ in
             refreshServer()

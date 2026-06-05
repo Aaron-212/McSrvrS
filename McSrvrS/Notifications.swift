@@ -6,3 +6,7 @@ extension Notification.Name {
     static let refreshAllServers = Notification.Name("refreshAllServers")
     static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
 }
+
+enum AppStorageKey {
+    static let foregroundRefreshInterval = "foregroundRefreshInterval"
+}

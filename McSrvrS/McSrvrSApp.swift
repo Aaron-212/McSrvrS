@@ -6,11 +6,11 @@ import os
 @main
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("foregroundRefreshInterval") private var refreshInterval: Double = 300 // Default: 5 minutes
+    @AppStorage(AppStorageKey.foregroundRefreshInterval) private var refreshInterval: Double = 300
     @State private var hasPerformedInitialRefresh = false
     @State private var refreshTimer: Timer?
 
-    private static let refreshID = "personal.aaron212.mcsrvrs.refresh"
+    private static let appRefreshTaskIdentifier = "personal.aaron212.mcsrvrs.refresh"
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -35,8 +35,7 @@ struct McSrvrSApp: App {
                         startForegroundRefreshTimer()
                     }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .refreshIntervalChanged)) { notification in
-                    // Handle refresh interval changes from settings
+                .onReceive(NotificationCenter.default.publisher(for: .refreshIntervalChanged)) { _ in
                     if scenePhase == .active {
                         startForegroundRefreshTimer()
                     }
@@ -71,11 +70,11 @@ struct McSrvrSApp: App {
             }
         }
         #if os(iOS)
-        .backgroundTask(.appRefresh(Self.refreshID)) {
+        .backgroundTask(.appRefresh(Self.appRefreshTaskIdentifier)) {
             await handleAppRefresh()
         }
         #endif
-        .onChange(of: scenePhase) { oldPhase, newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active && !hasPerformedInitialRefresh {
                 hasPerformedInitialRefresh = true
                 Task { await handleAppRefresh() }
@@ -101,14 +100,10 @@ struct McSrvrSApp: App {
 
     private func handleAppRefresh() async {
         do {
-            // Create a model context for background operations
             let context = ModelContext(sharedModelContainer)
-
-            // Fetch all servers
             let descriptor = FetchDescriptor<Server>()
             let servers = try context.fetch(descriptor)
 
-            // Update server statuses concurrently
             await withTaskGroup(of: Void.self) { group in
                 for server in servers {
                     group.addTask {
@@ -124,7 +119,7 @@ struct McSrvrSApp: App {
     #if os(iOS)
         private func scheduleNextRefresh() async {
             do {
-                let request = BGAppRefreshTaskRequest(identifier: Self.refreshID)
+                let request = BGAppRefreshTaskRequest(identifier: Self.appRefreshTaskIdentifier)
                 request.earliestBeginDate = .now.addingTimeInterval(60 * 15)  // 15 mins
                 try BGTaskScheduler.shared.submit(request)
                 log.info("App-refresh scheduled")
@@ -135,14 +130,13 @@ struct McSrvrSApp: App {
     #endif
 
     private func startForegroundRefreshTimer() {
-        stopForegroundRefreshTimer() // Ensure no duplicate timers
-        
-        // Don't start timer if refresh is disabled (interval is 0)
+        stopForegroundRefreshTimer()
+
         guard refreshInterval > 0 else {
             log.info("Foreground refresh disabled")
             return
         }
-        
+
         refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { _ in
             Task {
                 await handleAppRefresh()

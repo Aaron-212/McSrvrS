@@ -3,9 +3,8 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
-    @AppStorage("foregroundRefreshInterval") private var refreshInterval: Double = 300  // Default: 5 minutes (300 seconds)
+    @AppStorage(AppStorageKey.foregroundRefreshInterval) private var refreshInterval: Double = 300
 
-    // Predefined refresh interval options
     private let refreshIntervalOptions: [Double] = [
         30,
         60,
@@ -42,7 +41,6 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .onChange(of: refreshInterval) { _, newValue in
-                        // Post notification to update the timer
                         NotificationCenter.default.post(
                             name: .refreshIntervalChanged,
                             object: nil,

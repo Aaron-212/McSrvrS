@@ -1,7 +1,7 @@
 import Charts
 import SwiftUI
 
-enum QuerySpan: CaseIterable {
+enum PlayerHistorySpan: CaseIterable {
     case lastHour
     case lastDay
     case lastWeek
@@ -9,31 +9,31 @@ enum QuerySpan: CaseIterable {
     case lastQuarter
     case lastYear
 
-    var description: LocalizedStringResource {
+    var title: LocalizedStringResource {
         switch self {
         case .lastHour: return "Hour"
         case .lastDay: return "Day"
         case .lastWeek: return "Week"
         case .lastMonth: return "Month"
-        case .lastQuarter: return "Quater"
+        case .lastQuarter: return "Quarter"
         case .lastYear: return "Year"
         }
     }
 }
 
-struct PlayerCountDataPoint {
+struct PlayerCountSample {
     let timestamp: Date
     let playerCount: Int?
 }
 
 struct ServerDetailPlayersChartSection: View {
     let server: Server
-    @Binding var selectedSpan: QuerySpan
-    @State private var isHovering: Bool = false
-    @State private var hoverDate: Date = .now
+    @Binding var selectedSpan: PlayerHistorySpan
+    @State private var isInspectingChart: Bool = false
+    @State private var inspectedDate: Date = .now
 
     var body: some View {
-        let playerCountHistory = getPlayerCountHistory(for: selectedSpan)
+        let playerCountHistory = playerCountHistory(for: selectedSpan)
         let hasData = playerCountHistory.contains { $0.playerCount != nil }
         let domain = domain(for: playerCountHistory)
         let average = averagePlayerCount(hasData, for: playerCountHistory, between: domain)
@@ -48,8 +48,8 @@ struct ServerDetailPlayersChartSection: View {
         } content: {
             VStack(alignment: .leading, spacing: 12) {
                 Picker("Select Span", selection: $selectedSpan) {
-                    ForEach(QuerySpan.allCases, id: \.self) { span in
-                        Text(span.description)
+                    ForEach(PlayerHistorySpan.allCases, id: \.self) { span in
+                        Text(span.title)
                             .tag(span)
                     }
                 }
@@ -76,7 +76,7 @@ struct ServerDetailPlayersChartSection: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 8)
-                    .opacity(isHovering ? 0 : 1)
+                    .opacity(isInspectingChart ? 0 : 1)
                     .transition(.opacity)
 
                     Spacer()
@@ -85,7 +85,7 @@ struct ServerDetailPlayersChartSection: View {
                 Group {
                     if hasData {
                         Chart {
-                            if isHovering, let dataPoint = nearestDataPoint(for: playerCountHistory) {
+                            if isInspectingChart, let dataPoint = nearestDataPoint(for: playerCountHistory) {
                                 RuleMark(
                                     x: .value("Time", dataPoint.timestamp)
                                 )
@@ -94,7 +94,7 @@ struct ServerDetailPlayersChartSection: View {
                                     spacing: 11,
                                     overflowResolution: .init(x: .fit, y: .disabled)
                                 ) {
-                                    DataPointAnnotation(for: dataPoint)
+                                    dataPointAnnotation(for: dataPoint)
                                 }
                             }
 
@@ -131,18 +131,18 @@ struct ServerDetailPlayersChartSection: View {
                         #if os(macOS)
                             .chartOverlay { proxy in
                                 Color.clear
-                                .onContinuousHover { hoverPhas in
-                                    switch hoverPhas {
+                                .onContinuousHover { hoverPhase in
+                                    switch hoverPhase {
                                     case .active(let location):
                                         if let date: Date = proxy.value(atX: location.x, as: Date.self) {
                                             withAnimation(.easeOut(duration: 0.2)) {
-                                                isHovering = true
+                                                isInspectingChart = true
                                             }
-                                            hoverDate = date
+                                            inspectedDate = date
                                         }
                                     case .ended:
                                         withAnimation(.easeOut(duration: 0.2)) {
-                                            isHovering = false
+                                            isInspectingChart = false
                                         }
                                     }
                                 }
@@ -161,14 +161,14 @@ struct ServerDetailPlayersChartSection: View {
                                                     as: Date.self
                                                 ) {
                                                     withAnimation(.easeOut(duration: 0.2)) {
-                                                        isHovering = true
+                                                        isInspectingChart = true
                                                     }
-                                                    hoverDate = date
+                                                    inspectedDate = date
                                                 }
                                             }
                                             .onEnded { _ in
                                                 withAnimation(.easeOut(duration: 0.2)) {
-                                                    isHovering = false
+                                                    isInspectingChart = false
                                                 }
                                             }
                                     )
@@ -194,14 +194,14 @@ struct ServerDetailPlayersChartSection: View {
         .padding()
     }
 
-    private func domain(for playerCountHistory: [PlayerCountDataPoint]) -> ClosedRange<Date> {
+    private func domain(for playerCountHistory: [PlayerCountSample]) -> ClosedRange<Date> {
         return max(
             offsetDate(for: selectedSpan),
             playerCountHistory.first?.timestamp ?? offsetDate(for: selectedSpan)
         )...(playerCountHistory.last?.timestamp ?? Date())
     }
 
-    private func DataPointAnnotation(for dataPoint: PlayerCountDataPoint) -> some View {
+    private func dataPointAnnotation(for dataPoint: PlayerCountSample) -> some View {
         VStack(alignment: .leading) {
             Text("Player Count")
                 .font(.caption)
@@ -223,14 +223,14 @@ struct ServerDetailPlayersChartSection: View {
         .background(.background.secondary, in: RoundedRectangle(cornerRadius: 8))
     }
 
-    private func nearestDataPoint(for dataPoints: [PlayerCountDataPoint]) -> PlayerCountDataPoint? {
+    private func nearestDataPoint(for dataPoints: [PlayerCountSample]) -> PlayerCountSample? {
         guard !dataPoints.isEmpty else { return nil }
 
         var lo = 0
         var hi = dataPoints.count
         while lo < hi {
             let mid = (lo + hi) / 2
-            if dataPoints[mid].timestamp < hoverDate {
+            if dataPoints[mid].timestamp < inspectedDate {
                 lo = mid + 1
             } else {
                 hi = mid
@@ -247,13 +247,13 @@ struct ServerDetailPlayersChartSection: View {
         let prev = dataPoints[lo - 1]
         let next = dataPoints[lo]
 
-        let diffPrev = abs(prev.timestamp.timeIntervalSince(hoverDate))
-        let diffNext = abs(next.timestamp.timeIntervalSince(hoverDate))
+        let diffPrev = abs(prev.timestamp.timeIntervalSince(inspectedDate))
+        let diffNext = abs(next.timestamp.timeIntervalSince(inspectedDate))
 
         return diffPrev <= diffNext ? prev : next
     }
 
-    private func offsetDate(for span: QuerySpan) -> Date {
+    private func offsetDate(for span: PlayerHistorySpan) -> Date {
         let now = Date()
         let calendar = Calendar.current
 
@@ -273,11 +273,11 @@ struct ServerDetailPlayersChartSection: View {
         }
     }
 
-    private func getPlayerCountHistory(for span: QuerySpan) -> [PlayerCountDataPoint] {
+    private func playerCountHistory(for span: PlayerHistorySpan) -> [PlayerCountSample] {
         let startDate = offsetDate(for: span)
 
         let allStatuses = server.statuses
-            .filter { $0.timestamp >= startDate }  // Filter by date range
+            .filter { $0.timestamp >= startDate }
             .sorted { $0.timestamp < $1.timestamp }
 
         return allStatuses.map { status in
@@ -291,7 +291,7 @@ struct ServerDetailPlayersChartSection: View {
                 playerCount = nil
             }
 
-            return PlayerCountDataPoint(
+            return PlayerCountSample(
                 timestamp: status.timestamp,
                 playerCount: playerCount
             )
@@ -300,7 +300,7 @@ struct ServerDetailPlayersChartSection: View {
 
     private func averagePlayerCount(
         _ hasData: Bool,
-        for dataPoints: [PlayerCountDataPoint],
+        for dataPoints: [PlayerCountSample],
         between span: ClosedRange<Date>
     ) -> Int? {
         guard hasData else { return nil }
