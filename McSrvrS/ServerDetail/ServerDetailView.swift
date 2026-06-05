@@ -26,6 +26,9 @@ struct ServerDetailView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
         }
+        #if os(macOS)
+            .navigationTitle(server.name)
+        #endif
         .toolbar {
             #if os(macOS)
                 ToolbarItem {
@@ -38,6 +41,11 @@ struct ServerDetailView: View {
                 Button(action: { showingEditForm = true }) {
                     Label("Edit", systemImage: "pencil")
                 }
+            }
+
+
+            ToolbarItem(placement: .largeTitle) {
+                Text(verbatim: "ABSDAS")
             }
         }
         .refreshable {

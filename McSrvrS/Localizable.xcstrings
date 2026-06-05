@@ -20,6 +20,40 @@
     "%lld" : {
       "shouldTranslate" : false
     },
+    "%lld Servers" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Server"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "new",
+                  "value" : "%lld Servers"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld个服务器"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%u / %u" : {
       "localizations" : {
         "en" : {
@@ -46,7 +80,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "赶快来添加一个Minecraft服务器"
+            "value" : "添加一个Minecraft服务器"
           }
         }
       }
@@ -220,9 +254,6 @@
           }
         }
       }
-    },
-    "example.net" : {
-
     },
     "Filter Servers" : {
       "localizations" : {

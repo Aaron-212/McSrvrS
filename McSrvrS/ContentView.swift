@@ -62,6 +62,7 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("McSrvrS")
+            .navigationSubtitle("\(filteredServers.count) Servers")
             #if os(macOS)
                 .navigationSplitViewColumnWidth(min: 250, ideal: 320)
             #endif

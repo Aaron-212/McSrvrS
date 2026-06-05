@@ -27,24 +27,35 @@ struct ServerForm: View {
                     header: Text("Server Details"),
                     footer: Text("Default port for Minecraft servers is 25565")
                 ) {
-                    TextField("Server Name", text: $name, prompt: Text("Example Server"))
+                    LabeledContent("Server Name") {
+                        TextField(text: $name, prompt: Text("Example Server")) {
+                            EmptyView()
+                        }
+                    }
                         .textFieldStyle(.automatic)
 
-                    TextField("Host", text: $host, prompt: Text("example.net"))
-                        .autocorrectionDisabled()
-                        #if os(iOS)
-                            .autocapitalization(.none)
-                            .keyboardType(.URL)
-                        #endif
+                    LabeledContent("Host") {
+                        TextField(text: $host, prompt: Text(verbatim: "example.net")) {
+                            EmptyView()
+                        }
+                            .autocorrectionDisabled()
+                            #if os(iOS)
+                                .autocapitalization(.none)
+                                .keyboardType(.URL)
+                            #endif
+                    }
 
-                    TextField("Port", value: $port, format: .number)
-                        #if os(iOS)
-                            .keyboardType(.numberPad)
-                        #endif
+                    LabeledContent("Port") {
+                        TextField(value: $port, format: .number) {
+                            EmptyView()
+                        }
+                            #if os(iOS)
+                                .keyboardType(.numberPad)
+                            #endif
+                    }
                 }
             }
             .formStyle(.grouped)
-            .labelStyle(.titleOnly)
             .multilineTextAlignment(.trailing)
             .navigationTitle(isEditing ? "Edit Server" : "Add Server")
             #if os(iOS)
@@ -63,6 +74,7 @@ struct ServerForm: View {
                     Button("Save") {
                         saveServer()
                     }
+                    .buttonStyle(.borderedProminent)
                     .disabled(!isFormValid)
                 }
             }
