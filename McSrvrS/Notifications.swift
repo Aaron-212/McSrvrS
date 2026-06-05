@@ -9,4 +9,5 @@ extension Notification.Name {
 
 enum AppStorageKey {
     static let foregroundRefreshInterval = "foregroundRefreshInterval"
+    static let backgroundRefreshInterval = "backgroundRefreshInterval"
 }

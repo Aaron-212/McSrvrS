@@ -47,7 +47,7 @@ struct ServerDetailConnectionHistorySection: View {
                             Text(lastSeenDate.formatted(date: .abbreviated, time: .standard))
                                 .font(.callout)
                         } else {
-                            Text("N/A")
+                            Text(verbatim: "N/A")
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                         }

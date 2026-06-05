@@ -32,7 +32,7 @@ struct ServerDetailStatusSection: View {
                                 if let latency = statusData.latency {
                                     Text(verbatim: "\(latency) ms")
                                 } else {
-                                    Text("N/A")
+                                    Text(verbatim: "N/A")
                                 }
                             }
                             .font(.title3)

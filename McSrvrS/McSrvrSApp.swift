@@ -7,7 +7,8 @@ import SwiftUI
 @main
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage(AppStorageKey.foregroundRefreshInterval) private var refreshInterval: Double = 300
+    @AppStorage(AppStorageKey.foregroundRefreshInterval) private var foregroundRefreshInterval: Double = 300
+    @AppStorage(AppStorageKey.backgroundRefreshInterval) private var backgroundRefreshInterval: Double = 900
     @State private var refreshCoordinator = ServerRefreshCoordinator(
         modelContainer: AppModelContainer.shared
     )
@@ -17,15 +18,15 @@ struct McSrvrSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onChange(of: refreshInterval) { _, _ in
+                .onChange(of: foregroundRefreshInterval) { _, _ in
                     refreshCoordinator.refreshIntervalDidChange(
-                        to: refreshInterval,
+                        to: foregroundRefreshInterval,
                         scenePhase: scenePhase
                     )
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .refreshIntervalChanged)) { _ in
                     refreshCoordinator.refreshIntervalDidChange(
-                        to: refreshInterval,
+                        to: foregroundRefreshInterval,
                         scenePhase: scenePhase
                     )
                 }
@@ -66,7 +67,8 @@ struct McSrvrSApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             refreshCoordinator.scenePhaseDidChange(
                 to: newPhase,
-                refreshInterval: refreshInterval,
+                foregroundRefreshInterval: foregroundRefreshInterval,
+                backgroundRefreshInterval: backgroundRefreshInterval,
                 appRefreshTaskIdentifier: Self.appRefreshTaskIdentifier
             )
         }

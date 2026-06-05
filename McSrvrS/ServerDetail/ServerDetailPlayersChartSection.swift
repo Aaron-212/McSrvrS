@@ -130,9 +130,9 @@ struct ServerDetailPlayersChartSection: View {
                             .foregroundStyle(.secondary)
                         Group {
                             if let average = snapshot.average {
-                                Text("\(average)")
+                                Text(average, format: .number)
                             } else {
-                                Text("N/A")
+                                Text(verbatim: "N/A")
                             }
                         }
                         .font(.title)
@@ -267,9 +267,9 @@ struct ServerDetailPlayersChartSection: View {
                 .foregroundStyle(.secondary)
             Group {
                 if let playerCount = dataPoint.playerCount {
-                    Text("\(playerCount)")
+                    Text(playerCount, format: .number)
                 } else {
-                    Text("N/A")
+                    Text(verbatim: "N/A")
                 }
             }
             .font(.title)

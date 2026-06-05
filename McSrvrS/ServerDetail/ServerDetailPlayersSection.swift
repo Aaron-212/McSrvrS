@@ -13,7 +13,11 @@ struct ServerDetailPlayersSection: View {
 
                 Group {
                     if let players = statusData.players {
-                        Text("\(players.online) / \(players.max)")
+                        HStack {
+                            Text(players.online, format: .number)
+                            Text(verbatim: "/")
+                            Text(players.max, format: .number)
+                        }
                     } else {
                         Text(verbatim: "???")
                     }
@@ -28,6 +32,7 @@ struct ServerDetailPlayersSection: View {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
                             PlayerItemView(player: player)
+                                .help(player.playerId)
                         }
                     }
 

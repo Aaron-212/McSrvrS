@@ -30,13 +30,15 @@ struct ServerItemView: View {
                                 if let latency = statusData.latency {
                                     Text(verbatim: "\(latency) ms")
                                 } else {
-                                    Text("N/A")
+                                    Text(verbatim: "N/A")
                                 }
                             }
                             HStack(spacing: 4) {
                                 Image(systemName: "person.2.fill")
                                 if let players = statusData.players {
-                                    Text("\(players.online) / \(players.max)")
+                                    Text(players.online, format: .number)
+                                    Text(verbatim: "/")
+                                    Text(players.max, format: .number)
                                 } else {
                                     Text(verbatim: "???")
                                 }

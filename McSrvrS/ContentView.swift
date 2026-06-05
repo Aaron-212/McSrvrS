@@ -81,7 +81,7 @@ struct ContentView: View {
                             addServerButton
                         }
                     }
-                #else
+                #elseif os(macOS)
                     ToolbarItem(placement: .automatic) {
                         Button {
                             Task { await refreshAllServers() }
@@ -105,9 +105,7 @@ struct ContentView: View {
                 .font(.title)
                 .foregroundStyle(.tertiary)
                 .bold()
-                #if os(macOS)
-                    .navigationSplitViewColumnWidth(min: 320, ideal: 400)
-                #endif
+                .navigationSplitViewColumnWidth(min: 320, ideal: 400)
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search Servers")
         .sheet(item: $presentedSheet) { sheet in

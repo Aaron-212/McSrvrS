@@ -28,6 +28,9 @@ final class ServerRefreshCoordinator {
     private let modelContainer: ModelContainer
     private var hasPerformedInitialRefresh = false
     private var refreshTimer: Timer?
+    #if os(macOS)
+        private var backgroundActivityScheduler: NSBackgroundActivityScheduler?
+    #endif
 
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
@@ -53,7 +56,8 @@ final class ServerRefreshCoordinator {
 
     func scenePhaseDidChange(
         to newPhase: ScenePhase,
-        refreshInterval: Double,
+        foregroundRefreshInterval: Double,
+        backgroundRefreshInterval: Double,
         appRefreshTaskIdentifier: String
     ) {
         switch newPhase {
@@ -62,19 +66,30 @@ final class ServerRefreshCoordinator {
                 hasPerformedInitialRefresh = true
                 Task { await refreshAllServers() }
             }
-            startForegroundRefreshTimer(interval: refreshInterval)
+            stopBackgroundRefreshScheduler()
+            startForegroundRefreshTimer(interval: foregroundRefreshInterval)
 
         case .background:
             stopForegroundRefreshTimer()
-            #if os(iOS)
-                Task { await scheduleNextRefresh(taskIdentifier: appRefreshTaskIdentifier) }
-            #endif
+            scheduleBackgroundRefresh(
+                taskIdentifier: appRefreshTaskIdentifier,
+                interval: backgroundRefreshInterval
+            )
 
         case .inactive:
             stopForegroundRefreshTimer()
+            #if os(iOS)
+                break
+            #else
+                scheduleBackgroundRefresh(
+                    taskIdentifier: appRefreshTaskIdentifier,
+                    interval: backgroundRefreshInterval
+                )
+            #endif
 
         @unknown default:
             stopForegroundRefreshTimer()
+            stopBackgroundRefreshScheduler()
         }
     }
 
@@ -99,16 +114,64 @@ final class ServerRefreshCoordinator {
         refreshTimer = nil
     }
 
+    private func scheduleBackgroundRefresh(taskIdentifier: String, interval: Double) {
+        #if os(iOS)
+            Task {
+                await scheduleNextRefresh(taskIdentifier: taskIdentifier, interval: interval)
+            }
+        #elseif os(macOS)
+            scheduleMacOSBackgroundRefresh(taskIdentifier: taskIdentifier, interval: interval)
+        #endif
+    }
+
+    private func stopBackgroundRefreshScheduler() {
+        #if os(macOS)
+            backgroundActivityScheduler?.invalidate()
+            backgroundActivityScheduler = nil
+        #endif
+    }
+
     #if os(iOS)
-        private func scheduleNextRefresh(taskIdentifier: String) async {
+        private func scheduleNextRefresh(taskIdentifier: String, interval: Double) async {
+            guard interval > 0 else {
+                log.info("Background refresh disabled")
+                return
+            }
+
             do {
                 let request = BGAppRefreshTaskRequest(identifier: taskIdentifier)
-                request.earliestBeginDate = .now.addingTimeInterval(60 * 15)
+                request.earliestBeginDate = .now.addingTimeInterval(interval)
                 try BGTaskScheduler.shared.submit(request)
-                log.info("App-refresh scheduled")
+                log.info("App-refresh scheduled with interval: \(interval) seconds")
             } catch {
                 log.error("Could not schedule app-refresh: \(error.localizedDescription)")
             }
+        }
+    #endif
+
+    #if os(macOS)
+        private func scheduleMacOSBackgroundRefresh(taskIdentifier: String, interval: Double) {
+            stopBackgroundRefreshScheduler()
+
+            guard interval > 0 else {
+                log.info("Background refresh disabled")
+                return
+            }
+
+            let scheduler = NSBackgroundActivityScheduler(identifier: taskIdentifier)
+            scheduler.interval = interval
+            scheduler.tolerance = min(interval * 0.25, 900)
+            scheduler.repeats = true
+            scheduler.qualityOfService = .utility
+            scheduler.schedule { [weak self] completion in
+                Task { @MainActor in
+                    await self?.refreshAllServers()
+                    completion(.finished)
+                }
+            }
+
+            backgroundActivityScheduler = scheduler
+            log.info("macOS background refresh scheduled with interval: \(interval) seconds")
         }
     #endif
 }
