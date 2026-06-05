@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ServerDetailView: View {
     let server: Server
-    @State private var showingEditForm = false
+    @State private var presentedSheet: ServerDetailSheet?
     @State private var selectedHistorySpan: PlayerHistorySpan = .lastMonth
 
     var body: some View {
@@ -32,45 +32,51 @@ struct ServerDetailView: View {
         .toolbar {
             #if os(macOS)
                 ToolbarItem {
-                    Button(action: refreshServer) {
+                    Button {
+                        Task { await refreshServer() }
+                    } label: {
                         Label("Refresh This Server", systemImage: "arrow.trianglehead.clockwise")
                     }
                 }
             #endif
             ToolbarItem {
-                Button(action: { showingEditForm = true }) {
+                Button(action: { presentedSheet = .edit }) {
                     Label("Edit", systemImage: "pencil")
                 }
             }
-
-
-            ToolbarItem(placement: .largeTitle) {
-                Text(verbatim: "ABSDAS")
-            }
         }
         .refreshable {
-            refreshServer()
+            await refreshServer()
         }
-        .sheet(isPresented: $showingEditForm) {
-            ServerForm(editingServer: server)
+        .sheet(item: $presentedSheet) { sheet in
+            switch sheet {
+            case .edit:
+                ServerForm(editingServer: server)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .refreshThisServer)) { _ in
-            refreshServer()
+            Task { await refreshServer() }
         }
     }
 
     // MARK: - Actions
 
-    private func refreshServer() {
-        Task {
-            await server.updateStatus()
-        }
+    private func refreshServer() async {
+        await ServerRefreshService.refresh(server)
+    }
+}
+
+private enum ServerDetailSheet: Identifiable {
+    case edit
+
+    var id: String {
+        "edit"
     }
 }
 
 #Preview {
     let server = Server(name: "Example Server", host: "mc.example.com", port: 25565, orderIndex: 0)
-    NavigationView {
+    NavigationStack {
         ServerDetailView(server: server)
     }
 }

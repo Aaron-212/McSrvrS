@@ -26,6 +26,75 @@ struct PlayerCountSample {
     let playerCount: Int?
 }
 
+struct PlayerCountHistorySnapshot {
+    let samples: [PlayerCountSample]
+    let hasData: Bool
+    let domain: ClosedRange<Date>
+    let average: Int?
+
+    init(
+        server: Server,
+        span: PlayerHistorySpan,
+        calendar: Calendar = .current,
+        now: Date = .now
+    ) {
+        let startDate = Self.offsetDate(for: span, calendar: calendar, now: now)
+        let samples = server.statuses
+            .filter { $0.timestamp >= startDate }
+            .sorted { $0.timestamp < $1.timestamp }
+            .map { status in
+                PlayerCountSample(
+                    timestamp: status.timestamp,
+                    playerCount: status.statusData?.players.map { Int($0.online) }
+                )
+            }
+        let lowerBound = max(startDate, samples.first?.timestamp ?? startDate)
+        let upperBound = samples.last?.timestamp ?? now
+        let domain = lowerBound...upperBound
+        let hasData = samples.contains { $0.playerCount != nil }
+
+        self.samples = samples
+        self.hasData = hasData
+        self.domain = domain
+        self.average = Self.averagePlayerCount(hasData, for: samples, between: domain)
+    }
+
+    private static func offsetDate(for span: PlayerHistorySpan, calendar: Calendar, now: Date) -> Date {
+        switch span {
+        case .lastHour:
+            return calendar.date(byAdding: .hour, value: -1, to: now) ?? now
+        case .lastDay:
+            return calendar.date(byAdding: .day, value: -1, to: now) ?? now
+        case .lastWeek:
+            return calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        case .lastMonth:
+            return calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        case .lastQuarter:
+            return calendar.date(byAdding: .month, value: -3, to: now) ?? now
+        case .lastYear:
+            return calendar.date(byAdding: .year, value: -1, to: now) ?? now
+        }
+    }
+
+    private static func averagePlayerCount(
+        _ hasData: Bool,
+        for dataPoints: [PlayerCountSample],
+        between span: ClosedRange<Date>
+    ) -> Int? {
+        guard hasData else { return nil }
+
+        let validCounts =
+            dataPoints
+            .filter { span.contains($0.timestamp) }
+            .compactMap(\.playerCount)
+
+        guard !validCounts.isEmpty else { return nil }
+
+        let total = validCounts.reduce(0, +)
+        return total / validCounts.count
+    }
+}
+
 struct ServerDetailPlayersChartSection: View {
     let server: Server
     @Binding var selectedSpan: PlayerHistorySpan
@@ -33,10 +102,7 @@ struct ServerDetailPlayersChartSection: View {
     @State private var inspectedDate: Date = .now
 
     var body: some View {
-        let playerCountHistory = playerCountHistory(for: selectedSpan)
-        let hasData = playerCountHistory.contains { $0.playerCount != nil }
-        let domain = domain(for: playerCountHistory)
-        let average = averagePlayerCount(hasData, for: playerCountHistory, between: domain)
+        let snapshot = PlayerCountHistorySnapshot(server: server, span: selectedSpan)
 
         SectionView {
             HStack {
@@ -63,7 +129,7 @@ struct ServerDetailPlayersChartSection: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Group {
-                            if let average {
+                            if let average = snapshot.average {
                                 Text("\(average)")
                             } else {
                                 Text("N/A")
@@ -71,7 +137,7 @@ struct ServerDetailPlayersChartSection: View {
                         }
                         .font(.title)
                         .bold()
-                        Text(domain.description)
+                        Text(snapshot.domain.description)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -83,9 +149,9 @@ struct ServerDetailPlayersChartSection: View {
                 }
 
                 Group {
-                    if hasData {
+                    if snapshot.hasData {
                         Chart {
-                            if isInspectingChart, let dataPoint = nearestDataPoint(for: playerCountHistory) {
+                            if isInspectingChart, let dataPoint = nearestDataPoint(for: snapshot.samples) {
                                 RuleMark(
                                     x: .value("Time", dataPoint.timestamp)
                                 )
@@ -98,7 +164,7 @@ struct ServerDetailPlayersChartSection: View {
                                 }
                             }
 
-                            ForEach(playerCountHistory, id: \.timestamp) { dataPoint in
+                            ForEach(snapshot.samples, id: \.timestamp) { dataPoint in
                                 if let playerCount = dataPoint.playerCount {
                                     LineMark(
                                         x: .value("Time", dataPoint.timestamp),
@@ -126,8 +192,8 @@ struct ServerDetailPlayersChartSection: View {
                             }
                         }
                         .frame(height: 240)
-                        .chartXScale(domain: domain)
-                        .chartYScale(domain: 0...max(10, playerCountHistory.compactMap(\.playerCount).max() ?? 10))
+                        .chartXScale(domain: snapshot.domain)
+                        .chartYScale(domain: 0...max(10, snapshot.samples.compactMap(\.playerCount).max() ?? 10))
                         #if os(macOS)
                             .chartOverlay { proxy in
                                 Color.clear
@@ -194,13 +260,6 @@ struct ServerDetailPlayersChartSection: View {
         .padding()
     }
 
-    private func domain(for playerCountHistory: [PlayerCountSample]) -> ClosedRange<Date> {
-        return max(
-            offsetDate(for: selectedSpan),
-            playerCountHistory.first?.timestamp ?? offsetDate(for: selectedSpan)
-        )...(playerCountHistory.last?.timestamp ?? Date())
-    }
-
     private func dataPointAnnotation(for dataPoint: PlayerCountSample) -> some View {
         VStack(alignment: .leading) {
             Text("Player Count")
@@ -251,69 +310,6 @@ struct ServerDetailPlayersChartSection: View {
         let diffNext = abs(next.timestamp.timeIntervalSince(inspectedDate))
 
         return diffPrev <= diffNext ? prev : next
-    }
-
-    private func offsetDate(for span: PlayerHistorySpan) -> Date {
-        let now = Date()
-        let calendar = Calendar.current
-
-        switch span {
-        case .lastHour:
-            return calendar.date(byAdding: .hour, value: -1, to: now) ?? now
-        case .lastDay:
-            return calendar.date(byAdding: .day, value: -1, to: now) ?? now
-        case .lastWeek:
-            return calendar.date(byAdding: .day, value: -7, to: now) ?? now
-        case .lastMonth:
-            return calendar.date(byAdding: .month, value: -1, to: now) ?? now
-        case .lastQuarter:
-            return calendar.date(byAdding: .month, value: -3, to: now) ?? now
-        case .lastYear:
-            return calendar.date(byAdding: .year, value: -1, to: now) ?? now
-        }
-    }
-
-    private func playerCountHistory(for span: PlayerHistorySpan) -> [PlayerCountSample] {
-        let startDate = offsetDate(for: span)
-
-        let allStatuses = server.statuses
-            .filter { $0.timestamp >= startDate }
-            .sorted { $0.timestamp < $1.timestamp }
-
-        return allStatuses.map { status in
-            let playerCount: Int?
-
-            if let statusData = status.statusData,
-                let players = statusData.players
-            {
-                playerCount = Int(players.online)
-            } else {
-                playerCount = nil
-            }
-
-            return PlayerCountSample(
-                timestamp: status.timestamp,
-                playerCount: playerCount
-            )
-        }
-    }
-
-    private func averagePlayerCount(
-        _ hasData: Bool,
-        for dataPoints: [PlayerCountSample],
-        between span: ClosedRange<Date>
-    ) -> Int? {
-        guard hasData else { return nil }
-
-        let validCounts =
-            dataPoints
-            .filter { span.contains($0.timestamp) }
-            .compactMap(\.playerCount)
-
-        guard !validCounts.isEmpty else { return nil }
-
-        let total = validCounts.reduce(0, +)
-        return total / validCounts.count
     }
 }
 

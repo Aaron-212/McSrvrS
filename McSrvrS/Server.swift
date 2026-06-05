@@ -38,7 +38,7 @@ final class Server {
     // MARK: - Convenience Properties for Status
 
     var latestStatus: ServerStatus? {
-        return statuses.sorted(by: { $0.timestamp > $1.timestamp }).first
+        statuses.max { $0.timestamp < $1.timestamp }
     }
 
     var currentState: ServerStatus.StatusState {

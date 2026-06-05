@@ -1,47 +1,36 @@
-import BackgroundTasks
+#if os(iOS)
+    import BackgroundTasks
+#endif
 import SwiftData
 import SwiftUI
-import os
 
 @main
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppStorageKey.foregroundRefreshInterval) private var refreshInterval: Double = 300
-    @State private var hasPerformedInitialRefresh = false
-    @State private var refreshTimer: Timer?
+    @State private var refreshCoordinator = ServerRefreshCoordinator(
+        modelContainer: AppModelContainer.shared
+    )
 
     private static let appRefreshTaskIdentifier = "personal.aaron212.mcsrvrs.refresh"
-
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Server.self,
-            ServerStatus.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .onChange(of: refreshInterval) { _, _ in
-                    // Restart timer with new interval when the setting changes
-                    if scenePhase == .active {
-                        startForegroundRefreshTimer()
-                    }
+                    refreshCoordinator.refreshIntervalDidChange(
+                        to: refreshInterval,
+                        scenePhase: scenePhase
+                    )
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .refreshIntervalChanged)) { _ in
-                    if scenePhase == .active {
-                        startForegroundRefreshTimer()
-                    }
+                    refreshCoordinator.refreshIntervalDidChange(
+                        to: refreshInterval,
+                        scenePhase: scenePhase
+                    )
                 }
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(AppModelContainer.shared)
         .commandsReplaced {
             SidebarCommands()
             CommandGroup(replacing: .newItem) {
@@ -71,24 +60,15 @@ struct McSrvrSApp: App {
         }
         #if os(iOS)
         .backgroundTask(.appRefresh(Self.appRefreshTaskIdentifier)) {
-            await handleAppRefresh()
+            await refreshCoordinator.refreshAllServers()
         }
         #endif
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active && !hasPerformedInitialRefresh {
-                hasPerformedInitialRefresh = true
-                Task { await handleAppRefresh() }
-                startForegroundRefreshTimer()
-            } else if newPhase == .active {
-                startForegroundRefreshTimer()
-            } else if newPhase == .background {
-                stopForegroundRefreshTimer()
-                #if os(iOS)
-                    Task { await scheduleNextRefresh() }
-                #endif
-            } else if newPhase == .inactive {
-                stopForegroundRefreshTimer()
-            }
+            refreshCoordinator.scenePhaseDidChange(
+                to: newPhase,
+                refreshInterval: refreshInterval,
+                appRefreshTaskIdentifier: Self.appRefreshTaskIdentifier
+            )
         }
 
         #if os(macOS)
@@ -96,57 +76,5 @@ struct McSrvrSApp: App {
                 SettingsView()
             }
         #endif
-    }
-
-    private func handleAppRefresh() async {
-        do {
-            let context = ModelContext(sharedModelContainer)
-            let descriptor = FetchDescriptor<Server>()
-            let servers = try context.fetch(descriptor)
-
-            await withTaskGroup(of: Void.self) { group in
-                for server in servers {
-                    group.addTask {
-                        await server.updateStatus()
-                    }
-                }
-            }
-        } catch {
-            log.error("Background refresh failed: \(error)")
-        }
-    }
-
-    #if os(iOS)
-        private func scheduleNextRefresh() async {
-            do {
-                let request = BGAppRefreshTaskRequest(identifier: Self.appRefreshTaskIdentifier)
-                request.earliestBeginDate = .now.addingTimeInterval(60 * 15)  // 15 mins
-                try BGTaskScheduler.shared.submit(request)
-                log.info("App-refresh scheduled")
-            } catch {
-                log.error("Could not schedule app-refresh: \(error.localizedDescription)")
-            }
-        }
-    #endif
-
-    private func startForegroundRefreshTimer() {
-        stopForegroundRefreshTimer()
-
-        guard refreshInterval > 0 else {
-            log.info("Foreground refresh disabled")
-            return
-        }
-
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { _ in
-            Task {
-                await handleAppRefresh()
-            }
-        }
-        log.info("Foreground refresh timer started with interval: \(refreshInterval) seconds")
-    }
-
-    private func stopForegroundRefreshTimer() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
     }
 }

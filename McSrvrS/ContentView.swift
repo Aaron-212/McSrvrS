@@ -7,26 +7,15 @@ struct ContentView: View {
 
     @Query(sort: \Server.orderIndex) private var servers: [Server]
     @State private var searchText = ""
-    @State private var showingServerForm = false
-    @State private var showingSettings = false
+    @State private var presentedSheet: ContentSheet?
     @State private var showsOnlineOnly = false
 
+    private var filter: ServerListFilter {
+        ServerListFilter(searchText: searchText, showsOnlineOnly: showsOnlineOnly)
+    }
+
     private var filteredServers: [Server] {
-        let matchingServers =
-            searchText.isEmpty
-            ? servers
-            : servers.filter { server in
-                server.name.localizedCaseInsensitiveContains(searchText)
-                    || server.addressDescription.localizedCaseInsensitiveContains(searchText)
-            }
-
-        guard showsOnlineOnly else {
-            return matchingServers
-        }
-
-        return matchingServers.filter { server in
-            server.isOnline
-        }
+        filter.apply(to: servers)
     }
 
     var body: some View {
@@ -46,9 +35,7 @@ struct ContentView: View {
                             }
                             .swipeActions(edge: .leading) {
                                 Button {
-                                    Task {
-                                        await server.updateStatus()
-                                    }
+                                    Task { await ServerRefreshService.refresh(server) }
                                 } label: {
                                     Label("Refresh", systemImage: "arrow.clockwise")
                                 }
@@ -70,7 +57,7 @@ struct ContentView: View {
                 #if os(iOS)
                     if horizontalSizeClass == .compact {
                         ToolbarItem(placement: .navigationBarTrailing) {
-                            Button(action: { showingSettings = true }) {
+                            Button(action: { presentedSheet = .settings }) {
                                 Label("Settings", systemImage: "gear")
                             }
                         }
@@ -96,7 +83,9 @@ struct ContentView: View {
                     }
                 #else
                     ToolbarItem(placement: .automatic) {
-                        Button(action: refreshAllServers) {
+                        Button {
+                            Task { await refreshAllServers() }
+                        } label: {
                             Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
                         }
                     }
@@ -109,7 +98,7 @@ struct ContentView: View {
                 #endif
             }
             .refreshable {
-                refreshAllServers()
+                await refreshAllServers()
             }
         } detail: {
             Text("Select a Server")
@@ -121,18 +110,20 @@ struct ContentView: View {
                 #endif
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search Servers")
-        .sheet(isPresented: $showingServerForm) {
-            ServerForm()
-                .presentationDetents([.medium, .large])
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
+        .sheet(item: $presentedSheet) { sheet in
+            switch sheet {
+            case .serverForm:
+                ServerForm()
+                    .presentationDetents([.medium, .large])
+            case .settings:
+                SettingsView()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .addNewServer)) { _ in
             addServer()
         }
         .onReceive(NotificationCenter.default.publisher(for: .refreshAllServers)) { _ in
-            refreshAllServers()
+            Task { await refreshAllServers() }
         }
     }
 
@@ -151,11 +142,11 @@ struct ContentView: View {
     private func unavailableContent(hasServers: Bool) -> some View {
         ContentUnavailableView {
             Label(
-                unavailableContentTitle(hasServers: hasServers),
+                filter.unavailableContentTitle(hasServers: hasServers),
                 systemImage: hasServers ? "magnifyingglass" : "server.rack"
             )
         } description: {
-            Text(unavailableContentDescription(hasServers: hasServers))
+            Text(filter.unavailableContentDescription(hasServers: hasServers))
         } actions: {
             if !hasServers {
                 Button(action: addServer) {
@@ -168,32 +159,8 @@ struct ContentView: View {
         }
     }
 
-    private func unavailableContentTitle(hasServers: Bool) -> LocalizedStringResource {
-        if !hasServers {
-            return "No Servers Added"
-        } else if showsOnlineOnly && !searchText.isEmpty {
-            return "No Results"
-        } else if showsOnlineOnly {
-            return "No Online Servers"
-        } else {
-            return "No Results"
-        }
-    }
-
-    private func unavailableContentDescription(hasServers: Bool) -> LocalizedStringResource {
-        if !hasServers {
-            return "Add your first Minecraft server to get started"
-        } else if showsOnlineOnly && !searchText.isEmpty {
-            return "No online servers matching \"\(searchText)\""
-        } else if showsOnlineOnly {
-            return "All servers are currently offline"
-        } else {
-            return "No servers matching \"\(searchText)\""
-        }
-    }
-
     private func addServer() {
-        showingServerForm = true
+        presentedSheet = .serverForm
     }
 
     private func deleteServers(offsets: IndexSet) {
@@ -205,31 +172,33 @@ struct ContentView: View {
     }
 
     private func moveServers(source: IndexSet, destination: Int) {
-        var reorderedVisibleServers = filteredServers
-        reorderedVisibleServers.move(fromOffsets: source, toOffset: destination)
-
-        let visibleServerIDs = Set(filteredServers.map(\.id))
-        var visibleServerIterator = reorderedVisibleServers.makeIterator()
-        let reorderedServers = servers.map { server in
-            visibleServerIDs.contains(server.id)
-                ? (visibleServerIterator.next() ?? server)
-                : server
-        }
+        let reorderedServers = ServerListOrdering.reorderedServers(
+            all: servers,
+            visibleServers: filteredServers,
+            source: source,
+            destination: destination
+        )
 
         for (index, server) in reorderedServers.enumerated() {
             server.orderIndex = index
         }
     }
 
-    private func refreshAllServers() {
-        Task {
-            await withTaskGroup(of: Void.self) { group in
-                for server in servers {
-                    group.addTask {
-                        await server.updateStatus()
-                    }
-                }
-            }
+    private func refreshAllServers() async {
+        await ServerRefreshService.refreshAll(servers)
+    }
+}
+
+private enum ContentSheet: Identifiable {
+    case serverForm
+    case settings
+
+    var id: String {
+        switch self {
+        case .serverForm:
+            return "serverForm"
+        case .settings:
+            return "settings"
         }
     }
 }

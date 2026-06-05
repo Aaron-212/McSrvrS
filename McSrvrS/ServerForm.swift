@@ -6,9 +6,7 @@ struct ServerForm: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var name: String = ""
-    @State private var host: String = ""
-    @State private var port: UInt16? = 25565
+    @State private var draft: ServerFormDraft
 
     let editingServer: Server?
 
@@ -18,41 +16,43 @@ struct ServerForm: View {
 
     init(editingServer: Server? = nil) {
         self.editingServer = editingServer
+        draft = ServerFormDraft(server: editingServer)
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section(
-                    header: Text("Server Details"),
-                    footer: Text("Default port for Minecraft servers is 25565")
-                ) {
+                Section {
                     LabeledContent("Server Name") {
-                        TextField(text: $name, prompt: Text("Example Server")) {
+                        TextField(text: $draft.name, prompt: Text("Example Server")) {
                             EmptyView()
                         }
                     }
                         .textFieldStyle(.automatic)
 
                     LabeledContent("Host") {
-                        TextField(text: $host, prompt: Text(verbatim: "example.net")) {
+                        TextField(text: $draft.host, prompt: Text(verbatim: "example.net")) {
                             EmptyView()
                         }
                             .autocorrectionDisabled()
                             #if os(iOS)
-                                .autocapitalization(.none)
+                                .textInputAutocapitalization(.never)
                                 .keyboardType(.URL)
                             #endif
                     }
 
                     LabeledContent("Port") {
-                        TextField(value: $port, format: .number) {
+                        TextField(value: $draft.port, format: .number) {
                             EmptyView()
                         }
                             #if os(iOS)
                                 .keyboardType(.numberPad)
                             #endif
                     }
+                } header: {
+                    Text("Server Details")
+                } footer: {
+                    Text("Default port for Minecraft servers is 25565")
                 }
             }
             .formStyle(.grouped)
@@ -75,48 +75,23 @@ struct ServerForm: View {
                         saveServer()
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!isFormValid)
-                }
-            }
-            .onAppear {
-                if let editingServer {
-                    name = editingServer.name
-                    host = editingServer.host
-                    port = editingServer.port
+                    .disabled(!draft.isValid)
                 }
             }
         }
     }
 
-    private var isFormValid: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !host.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
     private func saveServer() {
-        let portNumber = port ?? 25565
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
-
         let savedServer: Server
 
         if let existingServer = editingServer {
-            existingServer.name = trimmedName
-            existingServer.host = trimmedHost
-            existingServer.port = portNumber
-            existingServer.lastUpdatedDate = Date()
-
+            draft.apply(to: existingServer)
             savedServer = existingServer
         } else {
             let descriptor = FetchDescriptor<Server>()
             let serverCount = (try? modelContext.fetchCount(descriptor)) ?? 0
 
-            let newServer = Server(
-                name: trimmedName,
-                host: trimmedHost,
-                port: portNumber,
-                orderIndex: serverCount
-            )
+            let newServer = draft.makeServer(orderIndex: serverCount)
             modelContext.insert(newServer)
             savedServer = newServer
         }
@@ -125,7 +100,7 @@ struct ServerForm: View {
             try modelContext.save()
 
             Task {
-                await savedServer.updateStatus()
+                await ServerRefreshService.refresh(savedServer)
             }
 
             dismiss()
