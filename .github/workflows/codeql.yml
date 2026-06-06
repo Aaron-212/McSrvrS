@@ -55,7 +55,7 @@ jobs:
       - name: Build Manually
         shell: bash
         run: |
-          xcodebuild -project McSrvrS.xcodeproj -scheme McSrvrS -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.0'
+          xcodebuild -project McSrvrS.xcodeproj -scheme McSrvrS -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.5'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

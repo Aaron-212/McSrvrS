@@ -52,6 +52,7 @@ struct ServerDetailStatusSection: View {
                             Text(statusData.version.name.trimmingFormatCodes())
                                 .font(.title3)
                                 .fontWeight(.semibold)
+                                .help(Text("Protocol: \(statusData.version.protocol)"))
                         }
                     }
 
@@ -97,7 +98,7 @@ struct ServerDetailStatusSection: View {
             // Never connected: red, Previously connected but can't connect now: orange
             return server.lastSeenDate == nil ? .red : .orange
         case .loading:
-            return .orange
+            return .accent
         }
     }
 

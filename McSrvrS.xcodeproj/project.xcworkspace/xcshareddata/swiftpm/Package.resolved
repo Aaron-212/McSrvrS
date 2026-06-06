@@ -1,6 +1,15 @@
 {
-  "originHash" : "d84e3856bb7f70982a9430d07414ec741af47418ccacd0c9f550e7d2b8eedd2d",
+  "originHash" : "8210e500182effb74398d1e72570db382412cf873407d97f94fe9f971d117011",
   "pins" : [
+    {
+      "identity" : "swift-async-dns-resolver",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-async-dns-resolver",
+      "state" : {
+        "revision" : "9900d9b4113427a170d5f26075c2128be94984df",
+        "version" : "0.7.0"
+      }
+    },
     {
       "identity" : "swiftui-cached-async-image",
       "kind" : "remoteSourceControl",

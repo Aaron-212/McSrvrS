@@ -47,9 +47,8 @@ final class Server {
 
     @MainActor
     func updateStatus() async {
-        statuses.append(ServerStatus(server: self, state: .loading))
-        let indexOfPlaceholder = statuses.count - 1
-        let finalStatus: ServerStatus
+        let status = ServerStatus(server: self, state: .loading)
+        statuses.append(status)
 
         let pingResult = await JavaServerPinger.shared.ping(
             address: address
@@ -57,20 +56,15 @@ final class Server {
 
         switch pingResult {
         case .success(let statusData):
-            finalStatus = ServerStatus(
-                server: self,
-                state: .success(statusData)
-            )
+            status.state = .success(statusData)
             lastSeenDate = .now
         case .failure(let error):
-            finalStatus = ServerStatus(
-                server: self,
-                state: .error(error.description)
-            )
+            status.state = .error(error.description)
         }
 
+        status.timestamp = .now
         lastUpdatedDate = .now
-        statuses[indexOfPlaceholder] = finalStatus
+        saveStatusUpdate()
 
         if statuses.count % 10 == 0 {
             cleanupOldStatuses()
@@ -90,6 +84,14 @@ final class Server {
         let removedCount = initialCount - statuses.count
         if removedCount > 0 {
             log.info("Cleaned up \(removedCount) old status records for server '\(self.name)'")
+        }
+    }
+
+    private func saveStatusUpdate() {
+        do {
+            try modelContext?.save()
+        } catch {
+            log.error("Could not save status update for server '\(self.name)': \(error.localizedDescription)")
         }
     }
 }

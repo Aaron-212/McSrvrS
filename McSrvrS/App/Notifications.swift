@@ -7,7 +7,7 @@ extension Notification.Name {
     static let refreshIntervalChanged = Notification.Name("refreshIntervalChanged")
 }
 
-enum AppStorageKey {
+nonisolated enum AppStorageKey {
     static let foregroundRefreshInterval = "foregroundRefreshInterval"
     static let backgroundRefreshInterval = "backgroundRefreshInterval"
     static let showsMenuBarExtra = "showsMenuBarExtra"

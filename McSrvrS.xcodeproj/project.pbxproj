@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8DA89D032FD42194003DD4A9 /* AsyncDNSResolver in Frameworks */ = {isa = PBXBuildFile; productRef = 8DA89D022FD42194003DD4A9 /* AsyncDNSResolver */; };
 		8DC552022E23F68800FC9242 /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 8DC552012E23F68800FC9242 /* CachedAsyncImage */; };
 /* End PBXBuildFile section */
 
@@ -41,6 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DC552022E23F68800FC9242 /* CachedAsyncImage in Frameworks */,
+				8DA89D032FD42194003DD4A9 /* AsyncDNSResolver in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,6 +86,7 @@
 			name = McSrvrS;
 			packageProductDependencies = (
 				8DC552012E23F68800FC9242 /* CachedAsyncImage */,
+				8DA89D022FD42194003DD4A9 /* AsyncDNSResolver */,
 			);
 			productName = "mc-server-status";
 			productReference = 8D5E8D412E20BCBF007603B3 /* McSrvrS.app */;
@@ -116,6 +119,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */,
+				8DA89D012FD42194003DD4A9 /* XCRemoteSwiftPackageReference "swift-async-dns-resolver" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8D5E8D422E20BCBF007603B3 /* Products */;
@@ -414,6 +418,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		8DA89D012FD42194003DD4A9 /* XCRemoteSwiftPackageReference "swift-async-dns-resolver" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-async-dns-resolver";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.7.0;
+			};
+		};
 		8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/lorenzofiamingo/swiftui-cached-async-image";
@@ -425,6 +437,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8DA89D022FD42194003DD4A9 /* AsyncDNSResolver */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DA89D012FD42194003DD4A9 /* XCRemoteSwiftPackageReference "swift-async-dns-resolver" */;
+			productName = AsyncDNSResolver;
+		};
 		8DC552012E23F68800FC9242 /* CachedAsyncImage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */;

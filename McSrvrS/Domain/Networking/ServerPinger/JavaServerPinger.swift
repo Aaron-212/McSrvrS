@@ -5,7 +5,6 @@ import os
 actor JavaServerPinger: ServerPinger {
     static let shared = JavaServerPinger()
 
-    private nonisolated static let connectionTimeoutSeconds = 5
     typealias PingResult = Result<ServerStatus.StatusData, ServerPingerError>
 
     private let logger: Logger
@@ -103,11 +102,6 @@ actor JavaServerPinger: ServerPinger {
         }
     }
 
-    private enum PingRouteEvent {
-        case directPingFinished(PingResult)
-        case srvLookupFinished(ResolvedServerAddress?)
-    }
-
     func ping(address: String) async -> PingResult {
         guard let serverAddress = ServerAddress(address) else {
             return .failure(.dataError("Invalid server address."))
@@ -119,72 +113,24 @@ actor JavaServerPinger: ServerPinger {
         )
 
         guard serverAddress.shouldResolveSRV else {
-            return await ping(resolvedAddress: directAddress)
+            return await openConnectionAndPing(resolvedAddress: directAddress)
         }
 
-        return await pingWithConcurrentSRVResolution(
-            serverAddress: serverAddress,
-            directAddress: directAddress
-        )
+        if let srvAddress = await MinecraftSRVResolver.resolveSRV(serverAddress) {
+            return await openConnectionAndPing(resolvedAddress: srvAddress)
+        }
+
+        return await openConnectionAndPing(resolvedAddress: directAddress)
     }
 
-    private func pingWithConcurrentSRVResolution(
-        serverAddress: ServerAddress,
-        directAddress: ResolvedServerAddress
+    private func openConnectionAndPing(
+        resolvedAddress: ResolvedServerAddress
     ) async -> PingResult {
-        await withTaskGroup(of: PingRouteEvent.self, returning: PingResult.self) { group in
-            group.addTask {
-                await .directPingFinished(self.ping(resolvedAddress: directAddress))
-            }
-
-            group.addTask {
-                await .srvLookupFinished(MinecraftSRVResolver.resolveSRV(serverAddress))
-            }
-
-            // A successful direct ping or a resolved SRV record can choose the route.
-            // Direct failures and empty SRV lookups wait for the other fallback.
-            var directFailure: PingResult?
-            var didReceiveEmptySRVLookup = false
-
-            while let event = await group.next() {
-                switch event {
-                case .directPingFinished(let result):
-                    if case .success = result {
-                        group.cancelAll()
-                        return result
-                    }
-
-                    directFailure = result
-                    if didReceiveEmptySRVLookup {
-                        group.cancelAll()
-                        return result
-                    }
-
-                case .srvLookupFinished(let resolvedAddress):
-                    guard let resolvedAddress else {
-                        didReceiveEmptySRVLookup = true
-                        if let directFailure {
-                            group.cancelAll()
-                            return directFailure
-                        }
-                        continue
-                    }
-
-                    group.cancelAll()
-                    return await ping(resolvedAddress: resolvedAddress)
-                }
-            }
-
-            return directFailure ?? .failure(.timedOut)
-        }
-    }
-
-    private func ping(resolvedAddress: ResolvedServerAddress) async -> PingResult {
         let host = resolvedAddress.host
         let port = resolvedAddress.port
         let tcpOptions = NWProtocolTCP.Options()
-        tcpOptions.connectionTimeout = Self.connectionTimeoutSeconds
-        tcpOptions.connectionDropTime = Self.connectionTimeoutSeconds
+        tcpOptions.connectionTimeout = 5
+        tcpOptions.connectionDropTime = 5
 
         let connection = NWConnection(
             host: .init(host),

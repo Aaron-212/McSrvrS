@@ -32,7 +32,7 @@ struct ServerDetailPlayersSection: View {
                     LazyVStack(spacing: 12) {
                         ForEach(playerSample, id: \.id) { player in
                             PlayerItemView(player: player)
-                                .help(player.playerId)
+                                .help(Text(verbatim: "UUID: \(player.playerId)"))
                         }
                     }
 

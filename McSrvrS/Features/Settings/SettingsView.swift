@@ -5,6 +5,7 @@ struct SettingsView: View {
 
     @AppStorage(AppStorageKey.foregroundRefreshInterval) private var foregroundRefreshInterval: Double = 300
     @AppStorage(AppStorageKey.backgroundRefreshInterval) private var backgroundRefreshInterval: Double = 900
+
     #if os(macOS)
         @AppStorage(AppStorageKey.showsMenuBarExtra) private var showsMenuBarExtra = true
     #endif
@@ -47,7 +48,7 @@ struct SettingsView: View {
                 Section {
                     Picker("Foreground Auto Refresh", selection: $foregroundRefreshInterval) {
                         ForEach(foregroundRefreshIntervalOptions, id: \.self) { option in
-                            refreshIntervalLabel(for: option)
+                            durationLabel(for: option, zeroLabel: "Never")
                                 .tag(option)
                         }
                     }
@@ -62,7 +63,7 @@ struct SettingsView: View {
 
                     Picker("Background Auto Refresh", selection: $backgroundRefreshInterval) {
                         ForEach(backgroundRefreshIntervalOptions, id: \.self) { option in
-                            refreshIntervalLabel(for: option)
+                            durationLabel(for: option, zeroLabel: "Never")
                                 .tag(option)
                         }
                     }
@@ -94,12 +95,12 @@ struct SettingsView: View {
         #endif
     }
 
-    private func refreshIntervalLabel(for interval: Double) -> Text {
-        if interval == 0 {
-            Text("Never")
+    private func durationLabel(for duration: Double, zeroLabel: String? = nil) -> Text {
+        if duration == 0, let zeroLabel {
+            Text(zeroLabel)
         } else {
             Text(
-                Duration.seconds(interval).formatted(
+                Duration.seconds(duration).formatted(
                     .units(
                         allowed: [.hours, .minutes, .seconds],
                         width: .wide

@@ -38,7 +38,7 @@ final class ServerRefreshCoordinator {
 
     func refreshAllServers() async {
         do {
-            let context = ModelContext(modelContainer)
+            let context = modelContainer.mainContext
             let servers = try context.fetch(FetchDescriptor<Server>())
             await ServerRefreshService.refreshAll(servers)
         } catch {

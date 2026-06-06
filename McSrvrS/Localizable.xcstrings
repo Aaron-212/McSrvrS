@@ -75,7 +75,14 @@
       }
     },
     "Address" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地址"
+          }
+        }
+      }
     },
     "All servers are currently offline" : {
       "localizations" : {
@@ -108,7 +115,14 @@
       }
     },
     "Background Auto Refresh" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台自动刷新"
+          }
+        }
+      }
     },
     "Cancel" : {
       "localizations" : {
@@ -304,7 +318,14 @@
       "shouldTranslate" : false
     },
     "Menu Bar" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "菜单栏"
+          }
+        }
+      }
     },
     "Message of the Day" : {
       "localizations" : {
@@ -407,7 +428,14 @@
       }
     },
     "No Servers" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有服务器"
+          }
+        }
+      }
     },
     "No Servers Added" : {
       "localizations" : {
@@ -430,7 +458,14 @@
       }
     },
     "Open main window" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开主界面"
+          }
+        }
+      }
     },
     "Player Count" : {
       "localizations" : {
@@ -475,6 +510,16 @@
     "Port is optional. Add one only when the server requires an explicit port." : {
 
     },
+    "Protocol: %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "协议：%lld"
+          }
+        }
+      }
+    },
     "Quarter" : {
       "localizations" : {
         "zh-Hans" : {
@@ -506,7 +551,14 @@
       }
     },
     "Refresh Interval" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刷新间隔"
+          }
+        }
+      }
     },
     "Refresh This Server" : {
       "localizations" : {
@@ -599,10 +651,24 @@
       }
     },
     "Show McSrvrS in the menu bar for quick server status access." : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在菜单栏显示McSrvrS，快速查看服务器。"
+          }
+        }
+      }
     },
     "Show Menu Bar Item" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在菜单栏显示"
+          }
+        }
+      }
     },
     "Time" : {
       "localizations" : {
