@@ -5,6 +5,9 @@ import Foundation
 import os
 import SwiftData
 import SwiftUI
+#if canImport(WidgetKit)
+    import WidgetKit
+#endif
 
 @MainActor
 enum ServerRefreshService {
@@ -41,6 +44,7 @@ final class ServerRefreshCoordinator {
             let context = modelContainer.mainContext
             let servers = try context.fetch(FetchDescriptor<Server>())
             await ServerRefreshService.refreshAll(servers)
+            reloadWidgetTimelines()
         } catch {
             log.error("Server refresh failed: \(error)")
         }
@@ -174,4 +178,10 @@ final class ServerRefreshCoordinator {
             log.info("macOS background refresh scheduled with interval: \(interval) seconds")
         }
     #endif
+
+    private func reloadWidgetTimelines() {
+        #if canImport(WidgetKit)
+            WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
 }

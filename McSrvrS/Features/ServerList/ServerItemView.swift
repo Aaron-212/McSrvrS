@@ -5,9 +5,12 @@ struct ServerItemView: View {
 
     var body: some View {
         HStack {
-            server.faviconView
+            server.faviconImage
+                .resizable()
+                .aspectRatio(contentMode: server.hasCustomFavicon ? .fit : .fill)
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+            
             VStack(alignment: .leading) {
                 HStack {
                     Text(server.name)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-#if os(iOS)
+#if canImport(UIKit)
     import UIKit
 #elseif os(macOS)
     import AppKit
@@ -10,36 +10,80 @@ struct FaviconView: View {
     let serverState: ServerStatus.StatusState
 
     var body: some View {
-        if case .success(let statusData) = serverState,
-            let image = decodeBase64PNG(from: statusData.favicon)
-        {
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-        } else {
-            Image("pack")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
+        serverState.faviconImage
+            .resizable()
+            .aspectRatio(contentMode: serverState.hasCustomFavicon ? .fit : .fill)
+    }
+}
+
+extension ServerStatus.StatusState {
+    var faviconImage: Image {
+        guard case .success(let statusData) = self else {
+            return .defaultServerFavicon
         }
+
+        return statusData.faviconImage
     }
 
-    func decodeBase64PNG(from favicon: String?) -> Image? {
-        guard let favicon = favicon else { return nil }
+    var hasCustomFavicon: Bool {
+        guard case .success(let statusData) = self else {
+            return false
+        }
+
+        return statusData.decodedFaviconImage != nil
+    }
+}
+
+extension ServerStatus.StatusData {
+    var faviconImage: Image {
+        decodedFaviconImage ?? .defaultServerFavicon
+    }
+
+    var decodedFaviconImage: Image? {
+        Image(base64PNG: favicon)
+    }
+}
+
+extension Server {
+    var faviconImage: Image {
+        currentState.faviconImage
+    }
+
+    var hasCustomFavicon: Bool {
+        currentState.hasCustomFavicon
+    }
+}
+
+extension Image {
+    static var defaultServerFavicon: Image {
+        Image("pack")
+    }
+
+    init?(base64PNG favicon: String?) {
+        guard let favicon else {
+            return nil
+        }
 
         let cleaned = favicon.components(separatedBy: ",").last ?? favicon
 
         #if os(macOS)
             guard let data = Data(base64Encoded: cleaned),
                 let nsImage = NSImage(data: data)
-            else { return nil }
+            else {
+                return nil
+            }
 
-            return Image(nsImage: nsImage)
-        #else
+            self = Image(nsImage: nsImage)
+        #elseif canImport(UIKit)
             guard let data = Data(base64Encoded: cleaned),
                 let uiImage = UIImage(data: data)
-            else { return nil }
+            else {
+                return nil
+            }
 
-            return Image(uiImage: uiImage)
+            self = Image(uiImage: uiImage)
+        #else
+            return nil
         #endif
     }
 }
@@ -52,6 +96,6 @@ extension ServerStatus.StatusData {
 
 extension Server {
     var faviconView: some View {
-        FaviconView(serverState: self.currentState)
+        FaviconView(serverState: currentState)
     }
 }

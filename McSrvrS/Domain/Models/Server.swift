@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
-import os
+#if !WIDGET_EXTENSION
+    import os
+#endif
 
 @Model
 final class Server {
@@ -43,6 +45,7 @@ final class Server {
         return false
     }
 
+#if !WIDGET_EXTENSION
     // MARK: - Server Status Updates
 
     @MainActor
@@ -94,4 +97,5 @@ final class Server {
             log.error("Could not save status update for server '\(self.name)': \(error.localizedDescription)")
         }
     }
+#endif
 }
