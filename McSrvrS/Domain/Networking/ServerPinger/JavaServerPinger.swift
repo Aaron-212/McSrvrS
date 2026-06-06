@@ -106,7 +106,6 @@ actor JavaServerPinger: ServerPinger {
     private enum PingRouteEvent {
         case directPingFinished(PingResult)
         case srvLookupFinished(ResolvedServerAddress?)
-        case srvPingFinished(PingResult)
     }
 
     func ping(address: String) async -> PingResult {
@@ -142,52 +141,41 @@ actor JavaServerPinger: ServerPinger {
                 await .srvLookupFinished(MinecraftSRVResolver.resolveSRV(serverAddress))
             }
 
-            var directResult: PingResult?
-            var srvLookupCompleted = false
-            var srvPingStarted = false
+            // A successful direct ping or a resolved SRV record can choose the route.
+            // Direct failures and empty SRV lookups wait for the other fallback.
+            var directFailure: PingResult?
+            var didReceiveEmptySRVLookup = false
 
             while let event = await group.next() {
                 switch event {
                 case .directPingFinished(let result):
-                    directResult = result
-
-                    if srvPingStarted {
-                        continue
-                    }
-
-                    if srvLookupCompleted {
-                        group.cancelAll()
-                        return result
-                    }
-
                     if case .success = result {
                         group.cancelAll()
                         return result
                     }
 
-                case .srvLookupFinished(let resolvedAddress):
-                    srvLookupCompleted = true
+                    directFailure = result
+                    if didReceiveEmptySRVLookup {
+                        group.cancelAll()
+                        return result
+                    }
 
+                case .srvLookupFinished(let resolvedAddress):
                     guard let resolvedAddress else {
-                        if let directResult {
+                        didReceiveEmptySRVLookup = true
+                        if let directFailure {
                             group.cancelAll()
-                            return directResult
+                            return directFailure
                         }
                         continue
                     }
 
-                    srvPingStarted = true
-                    group.addTask {
-                        await .srvPingFinished(self.ping(resolvedAddress: resolvedAddress))
-                    }
-
-                case .srvPingFinished(let result):
                     group.cancelAll()
-                    return result
+                    return await ping(resolvedAddress: resolvedAddress)
                 }
             }
 
-            return directResult ?? .failure(.timedOut)
+            return directFailure ?? .failure(.timedOut)
         }
     }
 
@@ -203,40 +191,57 @@ actor JavaServerPinger: ServerPinger {
             port: .init(integerLiteral: port),
             using: .init(tls: nil, tcp: tcpOptions)
         )
+        let connectionState = PingConnectionState()
 
-        return await withCheckedContinuation { continuation in
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready:
-                    connection.stateUpdateHandler = nil
-                    Task {
-                        do {
-                            let statusData = try await self.performPing(
-                                connection: connection,
-                                host: host,
-                                port: port
-                            )
-                            connection.cancel()
-                            continuation.resume(returning: .success(statusData))
-                        } catch {
-                            connection.cancel()
-                            continuation.resume(returning: .failure(await Self.pingerError(from: error)))
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                connectionState.setContinuation(continuation)
+
+                connection.stateUpdateHandler = { state in
+                    switch state {
+                    case .ready:
+                        connection.stateUpdateHandler = nil
+                        Task {
+                            do {
+                                let statusData = try await self.performPing(
+                                    connection: connection,
+                                    host: host,
+                                    port: port
+                                )
+                                connection.cancel()
+                                connectionState.resume(returning: .success(statusData))
+                            } catch {
+                                connection.cancel()
+                                connectionState.resume(
+                                    returning: .failure(await Self.pingerError(from: error))
+                                )
+                            }
                         }
+                    case .failed(let error):
+                        connection.stateUpdateHandler = nil
+                        connection.cancel()
+                        connectionState.resume(
+                            returning: .failure(ServerPingerError.connectionFailed(error))
+                        )
+                    case .cancelled:
+                        connection.stateUpdateHandler = nil
+                        connectionState.resume(returning: .failure(.cancelled))
+                    default:
+                        break
                     }
-                case .failed(let error):
-                    connection.stateUpdateHandler = nil
-                    connection.cancel()
-                    continuation.resume(
-                        returning: .failure(ServerPingerError.connectionFailed(error))
-                    )
-                case .cancelled:
-                    break
-                default:
-                    break
                 }
-            }
 
-            connection.start(queue: .global())
+                guard !Task.isCancelled else {
+                    connection.cancel()
+                    connectionState.resume(returning: .failure(.cancelled))
+                    return
+                }
+
+                connection.start(queue: .global())
+            }
+        } onCancel: {
+            connection.cancel()
+            connectionState.resume(returning: .failure(.cancelled))
         }
     }
 
@@ -457,5 +462,47 @@ actor JavaServerPinger: ServerPinger {
             val >>= 7
         }
         return size
+    }
+}
+
+private nonisolated final class PingConnectionState: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<JavaServerPinger.PingResult, Never>?
+    private var pendingResult: JavaServerPinger.PingResult?
+    private var didResume = false
+
+    func setContinuation(_ continuation: CheckedContinuation<JavaServerPinger.PingResult, Never>) {
+        lock.lock()
+
+        if didResume {
+            let result = pendingResult ?? .failure(.cancelled)
+            pendingResult = nil
+            lock.unlock()
+            continuation.resume(returning: result)
+            return
+        }
+
+        self.continuation = continuation
+        lock.unlock()
+    }
+
+    func resume(returning result: JavaServerPinger.PingResult) {
+        lock.lock()
+        guard !didResume else {
+            lock.unlock()
+            return
+        }
+
+        didResume = true
+        let continuation = continuation
+        self.continuation = nil
+
+        if continuation == nil {
+            pendingResult = result
+        }
+
+        lock.unlock()
+
+        continuation?.resume(returning: result)
     }
 }

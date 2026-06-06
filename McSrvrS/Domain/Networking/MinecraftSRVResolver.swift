@@ -1,6 +1,7 @@
 import Dispatch
 import Foundation
 import dnssd
+import os
 
 nonisolated struct ResolvedServerAddress: Sendable {
     let host: String
@@ -8,7 +9,8 @@ nonisolated struct ResolvedServerAddress: Sendable {
 }
 
 nonisolated enum MinecraftSRVResolver {
-    private static let timeout: TimeInterval = 2
+    fileprivate static let timeout: TimeInterval = 2
+    private static let logger = Logger(subsystem: "personal.aaron212.mcsrv", category: "MinecraftSRVResolver")
 
     static func resolve(_ address: ServerAddress) async -> ResolvedServerAddress {
         if let port = address.port {
@@ -27,53 +29,39 @@ nonisolated enum MinecraftSRVResolver {
     }
 
     static func resolveSRV(_ address: ServerAddress) async -> ResolvedServerAddress? {
-        guard address.shouldResolveSRV,
-            let record = await querySRVRecord(for: address.host)
-        else {
+        guard address.shouldResolveSRV else {
+            logger.debug("Skipping SRV lookup for \(address.description, privacy: .public)")
             return nil
         }
+
+        logger.info("Starting SRV lookup for \(address.host, privacy: .public)")
+
+        guard let record = await querySRVRecord(for: address.host) else {
+            logger.info("No SRV record resolved for \(address.host, privacy: .public)")
+            return nil
+        }
+
+        logger.info(
+            "SRV lookup resolved \(address.host, privacy: .public) to \(record.target, privacy: .public):\(record.port)"
+        )
 
         return ResolvedServerAddress(host: record.target, port: record.port)
     }
 
     private static func querySRVRecord(for host: String) async -> SRVRecord? {
-        await withCheckedContinuation { continuation in
-            let context = SRVLookupContext(continuation: continuation)
-            let retainedContext = Unmanaged.passRetained(context)
-            context.retainedContext = retainedContext
+        let queryName = "_minecraft._tcp.\(host)"
+        let context = SRVLookupContext(host: host, queryName: queryName)
 
-            var serviceRef: DNSServiceRef?
-            let error = DNSServiceQueryRecord(
-                &serviceRef,
-                DNSServiceFlags(0),
-                0,
-                "_minecraft._tcp.\(host)",
-                UInt16(kDNSServiceType_SRV),
-                UInt16(kDNSServiceClass_IN),
-                srvQueryCallback,
-                retainedContext.toOpaque()
-            )
-
-            guard error == kDNSServiceErr_NoError, let serviceRef else {
-                retainedContext.release()
-                continuation.resume(returning: nil)
-                return
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                context.start(continuation: continuation)
             }
-
-            context.serviceRef = serviceRef
-
-            let queue = DispatchQueue(label: "personal.aaron212.mcsrvrs.srv-resolver")
-            let dispatchError = DNSServiceSetDispatchQueue(serviceRef, queue)
-            guard dispatchError == kDNSServiceErr_NoError else {
-                context.finish()
-                return
-            }
-
-            context.startTimeout(on: queue, after: timeout)
+        } onCancel: {
+            context.cancel()
         }
     }
 
-    private static let srvQueryCallback: DNSServiceQueryRecordReply = {
+    fileprivate static let srvQueryCallback: DNSServiceQueryRecordReply = {
         _,
         flags,
         _,
@@ -106,22 +94,98 @@ private nonisolated struct SRVRecord {
     let target: String
 }
 
-private nonisolated final class SRVLookupContext {
-    var retainedContext: Unmanaged<SRVLookupContext>?
-    var serviceRef: DNSServiceRef?
+private nonisolated final class SRVLookupContext: @unchecked Sendable {
+    private static let logger = Logger(
+        subsystem: "personal.aaron212.mcsrv",
+        category: "MinecraftSRVResolver"
+    )
 
+    private let host: String
+    private let queryName: String
+    private let queue = DispatchQueue(label: "personal.aaron212.mcsrvrs.srv-resolver")
+
+    private var retainedContext: Unmanaged<SRVLookupContext>?
+    private var serviceRef: DNSServiceRef?
     private var continuation: CheckedContinuation<SRVRecord?, Never>?
     private var records: [SRVRecord] = []
     private var timeoutWorkItem: DispatchWorkItem?
     private var isFinished = false
 
-    init(continuation: CheckedContinuation<SRVRecord?, Never>) {
-        self.continuation = continuation
+    init(host: String, queryName: String) {
+        self.host = host
+        self.queryName = queryName
     }
 
-    func startTimeout(on queue: DispatchQueue, after timeout: TimeInterval) {
+    func start(continuation: CheckedContinuation<SRVRecord?, Never>) {
+        queue.async {
+            self.startQuery(continuation: continuation)
+        }
+    }
+
+    func cancel() {
+        queue.async {
+            guard !self.isFinished else {
+                return
+            }
+
+            Self.logger.debug("SRV lookup cancelled for \(self.queryName, privacy: .public)")
+            self.finish()
+        }
+    }
+
+    private func startQuery(continuation: CheckedContinuation<SRVRecord?, Never>) {
+        guard !isFinished else {
+            continuation.resume(returning: nil)
+            return
+        }
+
+        self.continuation = continuation
+
+        let retainedContext = Unmanaged.passRetained(self)
+        self.retainedContext = retainedContext
+
+        var serviceRef: DNSServiceRef?
+        let error = DNSServiceQueryRecord(
+            &serviceRef,
+            DNSServiceFlags(0),
+            0,
+            queryName,
+            UInt16(kDNSServiceType_SRV),
+            UInt16(kDNSServiceClass_IN),
+            MinecraftSRVResolver.srvQueryCallback,
+            retainedContext.toOpaque()
+        )
+
+        guard error == kDNSServiceErr_NoError, let serviceRef else {
+            Self.logger.error(
+                "SRV query failed to start for \(self.queryName, privacy: .public): DNSService error \(error)"
+            )
+            finish()
+            return
+        }
+
+        self.serviceRef = serviceRef
+
+        let dispatchError = DNSServiceSetDispatchQueue(serviceRef, queue)
+        guard dispatchError == kDNSServiceErr_NoError else {
+            Self.logger.error(
+                "SRV query dispatch queue setup failed for \(self.queryName, privacy: .public): DNSService error \(dispatchError)"
+            )
+            finish()
+            return
+        }
+
+        startTimeout(after: MinecraftSRVResolver.timeout)
+    }
+
+    private func startTimeout(after timeout: TimeInterval) {
         let timeoutWorkItem = DispatchWorkItem { [weak self] in
-            self?.finish()
+            guard let self, !self.isFinished else {
+                return
+            }
+
+            Self.logger.info("SRV lookup timed out for \(self.queryName, privacy: .public)")
+            self.finish()
         }
         self.timeoutWorkItem = timeoutWorkItem
         queue.asyncAfter(deadline: .now() + timeout, execute: timeoutWorkItem)
@@ -138,14 +202,22 @@ private nonisolated final class SRVLookupContext {
         }
 
         if errorCode != kDNSServiceErr_NoError {
+            Self.logger.error(
+                "SRV query failed for \(self.queryName, privacy: .public): DNSService error \(errorCode)"
+            )
             finish()
             return
         }
 
-        if let data,
-            let record = SRVRecord(data: Data(bytes: data, count: Int(dataLength)))
-        {
-            records.append(record)
+        if let data {
+            if let record = SRVRecord(data: Data(bytes: data, count: Int(dataLength))) {
+                records.append(record)
+                Self.logger.debug(
+                    "SRV record received for \(self.host, privacy: .public): target=\(record.target, privacy: .public) port=\(record.port) priority=\(record.priority) weight=\(record.weight)"
+                )
+            } else {
+                Self.logger.debug("Ignoring invalid SRV record data for \(self.queryName, privacy: .public)")
+            }
         }
 
         if flags & DNSServiceFlags(kDNSServiceFlagsMoreComing) == 0 {
@@ -153,7 +225,7 @@ private nonisolated final class SRVLookupContext {
         }
     }
 
-    func finish() {
+    private func finish() {
         guard !isFinished else {
             return
         }
@@ -173,6 +245,12 @@ private nonisolated final class SRVLookupContext {
 
         if let serviceRef {
             DNSServiceRefDeallocate(serviceRef)
+        }
+
+        if let record {
+            Self.logger.info(
+                "Selected SRV record for \(self.host, privacy: .public): \(record.target, privacy: .public):\(record.port)"
+            )
         }
 
         continuation?.resume(returning: record)

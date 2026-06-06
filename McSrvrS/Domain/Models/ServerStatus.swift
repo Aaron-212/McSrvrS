@@ -52,6 +52,7 @@ final class ServerStatus {
 
     struct Version: Codable {
         let name: String
+        let `protocol`: Int
     }
 
     struct Player: Codable {
