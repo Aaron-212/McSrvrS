@@ -74,18 +74,7 @@
         }
       }
     },
-    "Adjust how often the app updates the servers' information." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "调整自动更新服务器信息的时间间隔"
-          }
-        }
-      }
-    },
-    "Adjust the earliest interval for background refresh scheduling." : {
+    "Address" : {
 
     },
     "All servers are currently offline" : {
@@ -201,16 +190,6 @@
         }
       }
     },
-    "Default port for Minecraft servers is 25565" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minecraft服务器的默认端口是25565"
-          }
-        }
-      }
-    },
     "Done" : {
       "localizations" : {
         "zh-Hans" : {
@@ -267,16 +246,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "前台自动刷新"
-          }
-        }
-      }
-    },
-    "Host" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "主机名"
           }
         }
       }
@@ -503,15 +472,8 @@
         }
       }
     },
-    "Port" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "端口"
-          }
-        }
-      }
+    "Port is optional. Add one only when the server requires an explicit port." : {
+
     },
     "Quarter" : {
       "localizations" : {
@@ -545,17 +507,6 @@
     },
     "Refresh Interval" : {
 
-    },
-    "Refresh Settings" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "刷新设置"
-          }
-        }
-      }
     },
     "Refresh This Server" : {
       "localizations" : {

@@ -30,8 +30,8 @@ struct ServerForm: View {
                     }
                         .textFieldStyle(.automatic)
 
-                    LabeledContent("Host") {
-                        TextField(text: $draft.host, prompt: Text(verbatim: "example.net")) {
+                    LabeledContent("Address") {
+                        TextField(text: $draft.address, prompt: Text(verbatim: "example.net or example.net:25565")) {
                             EmptyView()
                         }
                             .autocorrectionDisabled()
@@ -40,19 +40,10 @@ struct ServerForm: View {
                                 .keyboardType(.URL)
                             #endif
                     }
-
-                    LabeledContent("Port") {
-                        TextField(value: $draft.port, format: .number) {
-                            EmptyView()
-                        }
-                            #if os(iOS)
-                                .keyboardType(.numberPad)
-                            #endif
-                    }
                 } header: {
                     Text("Server Details")
                 } footer: {
-                    Text("Default port for Minecraft servers is 25565")
+                    Text("Port is optional. Add one only when the server requires an explicit port.")
                 }
             }
             .formStyle(.grouped)

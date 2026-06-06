@@ -1,7 +1,7 @@
 import Foundation
 
 protocol ServerPinger: AnyObject {
-    func ping(host: String, port: UInt16) async -> Result<
+    func ping(address: String) async -> Result<
         ServerStatus.StatusData, ServerPingerError
     >
 }

@@ -75,7 +75,7 @@ private enum ServerDetailSheet: Identifiable {
 }
 
 #Preview {
-    let server = Server(name: "Example Server", host: "mc.example.com", port: 25565, orderIndex: 0)
+    let server = Server(name: "Example Server", address: "mc.example.com", orderIndex: 0)
     NavigationStack {
         ServerDetailView(server: server)
     }

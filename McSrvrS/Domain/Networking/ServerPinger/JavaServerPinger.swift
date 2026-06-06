@@ -5,7 +5,8 @@ import os
 actor JavaServerPinger: ServerPinger {
     static let shared = JavaServerPinger()
 
-    private static let connectionTimeoutSeconds = 5
+    private nonisolated static let connectionTimeoutSeconds = 5
+    typealias PingResult = Result<ServerStatus.StatusData, ServerPingerError>
 
     private let logger: Logger
 
@@ -102,12 +103,100 @@ actor JavaServerPinger: ServerPinger {
         }
     }
 
-    func ping(host: String, port: UInt16) async -> Result<
-        ServerStatus.StatusData, ServerPingerError
-    > {
+    private enum PingRouteEvent {
+        case directPingFinished(PingResult)
+        case srvLookupFinished(ResolvedServerAddress?)
+        case srvPingFinished(PingResult)
+    }
+
+    func ping(address: String) async -> PingResult {
+        guard let serverAddress = ServerAddress(address) else {
+            return .failure(.dataError("Invalid server address."))
+        }
+
+        let directAddress = ResolvedServerAddress(
+            host: serverAddress.host,
+            port: serverAddress.portForDirectConnection
+        )
+
+        guard serverAddress.shouldResolveSRV else {
+            return await ping(resolvedAddress: directAddress)
+        }
+
+        return await pingWithConcurrentSRVResolution(
+            serverAddress: serverAddress,
+            directAddress: directAddress
+        )
+    }
+
+    private func pingWithConcurrentSRVResolution(
+        serverAddress: ServerAddress,
+        directAddress: ResolvedServerAddress
+    ) async -> PingResult {
+        await withTaskGroup(of: PingRouteEvent.self, returning: PingResult.self) { group in
+            group.addTask {
+                await .directPingFinished(self.ping(resolvedAddress: directAddress))
+            }
+
+            group.addTask {
+                await .srvLookupFinished(MinecraftSRVResolver.resolveSRV(serverAddress))
+            }
+
+            var directResult: PingResult?
+            var srvLookupCompleted = false
+            var srvPingStarted = false
+
+            while let event = await group.next() {
+                switch event {
+                case .directPingFinished(let result):
+                    directResult = result
+
+                    if srvPingStarted {
+                        continue
+                    }
+
+                    if srvLookupCompleted {
+                        group.cancelAll()
+                        return result
+                    }
+
+                    if case .success = result {
+                        group.cancelAll()
+                        return result
+                    }
+
+                case .srvLookupFinished(let resolvedAddress):
+                    srvLookupCompleted = true
+
+                    guard let resolvedAddress else {
+                        if let directResult {
+                            group.cancelAll()
+                            return directResult
+                        }
+                        continue
+                    }
+
+                    srvPingStarted = true
+                    group.addTask {
+                        await .srvPingFinished(self.ping(resolvedAddress: resolvedAddress))
+                    }
+
+                case .srvPingFinished(let result):
+                    group.cancelAll()
+                    return result
+                }
+            }
+
+            return directResult ?? .failure(.timedOut)
+        }
+    }
+
+    private func ping(resolvedAddress: ResolvedServerAddress) async -> PingResult {
+        let host = resolvedAddress.host
+        let port = resolvedAddress.port
         let tcpOptions = NWProtocolTCP.Options()
-        tcpOptions.connectionTimeout = await Self.connectionTimeoutSeconds
-        tcpOptions.connectionDropTime = await Self.connectionTimeoutSeconds
+        tcpOptions.connectionTimeout = Self.connectionTimeoutSeconds
+        tcpOptions.connectionDropTime = Self.connectionTimeoutSeconds
 
         let connection = NWConnection(
             host: .init(host),

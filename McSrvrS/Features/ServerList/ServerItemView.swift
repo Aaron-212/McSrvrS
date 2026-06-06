@@ -79,6 +79,6 @@ struct ServerItemView: View {
 }
 
 #Preview {
-    let server = Server(name: "Example Server", host: "example.com", port: 25565, orderIndex: 0)
+    let server = Server(name: "Example Server", address: "example.com:25565", orderIndex: 0)
     ServerItemView(server: server)
 }

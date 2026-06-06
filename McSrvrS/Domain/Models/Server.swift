@@ -9,30 +9,23 @@ final class Server {
     var orderIndex: Int
     // User defined
     var name: String
-    var host: String
-    var port: UInt16
+    var address: String
     // Auto generated
     @Relationship(deleteRule: .cascade, inverse: \ServerStatus.server)
     var statuses: [ServerStatus] = []
     var lastSeenDate: Date?
     var lastUpdatedDate: Date
 
-    init(name: String, host: String, port: UInt16 = 25565, orderIndex: Int) {
+    init(name: String, address: String, orderIndex: Int) {
         self.id = UUID()
         self.orderIndex = orderIndex
         self.name = name
-        self.host = host
-        self.port = port
+        self.address = address
         self.lastUpdatedDate = Date.now
     }
 
     var addressDescription: String {
-        if self.host.contains(":") {
-            // probably an IPv6 address
-            return "[\(self.host)]:\(self.port)"
-        } else {
-            return "\(self.host):\(self.port)"
-        }
+        address
     }
 
     // MARK: - Convenience Properties for Status
@@ -59,8 +52,7 @@ final class Server {
         let finalStatus: ServerStatus
 
         let pingResult = await JavaServerPinger.shared.ping(
-            host: host,
-            port: port
+            address: address
         )
 
         switch pingResult {

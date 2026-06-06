@@ -42,9 +42,9 @@ struct MenuBarServerListView: View {
     let container = try! ModelContainer(for: Server.self, ServerStatus.self, configurations: configuration)
 
     let servers = [
-        Server(name: "Survival", host: "survival.example.com", port: 25565, orderIndex: 0),
-        Server(name: "Creative", host: "creative.example.com", port: 25565, orderIndex: 1),
-        Server(name: "Minigames", host: "mini.example.com", port: 25565, orderIndex: 2),
+        Server(name: "Survival", address: "survival.example.com", orderIndex: 0),
+        Server(name: "Creative", address: "creative.example.com:25565", orderIndex: 1),
+        Server(name: "Minigames", address: "mini.example.com", orderIndex: 2),
     ]
 
     for server in servers {
