@@ -1,14 +1,18 @@
+import SwiftData
+import SwiftUI
+
 #if os(iOS)
     import BackgroundTasks
 #endif
-import SwiftData
-import SwiftUI
 
 @main
 struct McSrvrSApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppStorageKey.foregroundRefreshInterval) private var foregroundRefreshInterval: Double = 300
     @AppStorage(AppStorageKey.backgroundRefreshInterval) private var backgroundRefreshInterval: Double = 900
+    #if os(macOS)
+        @AppStorage(AppStorageKey.showsMenuBarExtra) private var showsMenuBarExtra = true
+    #endif
     @State private var refreshCoordinator = ServerRefreshCoordinator(
         modelContainer: AppModelContainer.shared
     )
@@ -60,9 +64,9 @@ struct McSrvrSApp: App {
             }
         }
         #if os(iOS)
-        .backgroundTask(.appRefresh(Self.appRefreshTaskIdentifier)) {
-            await refreshCoordinator.refreshAllServers()
-        }
+            .backgroundTask(.appRefresh(Self.appRefreshTaskIdentifier)) {
+                await refreshCoordinator.refreshAllServers()
+            }
         #endif
         .onChange(of: scenePhase) { _, newPhase in
             refreshCoordinator.scenePhaseDidChange(
@@ -74,6 +78,12 @@ struct McSrvrSApp: App {
         }
 
         #if os(macOS)
+            MenuBarExtra("McSrvrS", systemImage: "server.rack", isInserted: $showsMenuBarExtra) {
+                MenuBarServerListView()
+            }
+            .menuBarExtraStyle(.window)
+            .modelContainer(AppModelContainer.shared)
+
             Settings {
                 SettingsView()
             }

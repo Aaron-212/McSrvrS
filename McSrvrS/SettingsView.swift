@@ -5,6 +5,9 @@ struct SettingsView: View {
 
     @AppStorage(AppStorageKey.foregroundRefreshInterval) private var foregroundRefreshInterval: Double = 300
     @AppStorage(AppStorageKey.backgroundRefreshInterval) private var backgroundRefreshInterval: Double = 900
+    #if os(macOS)
+        @AppStorage(AppStorageKey.showsMenuBarExtra) private var showsMenuBarExtra = true
+    #endif
 
     private let foregroundRefreshIntervalOptions: [Double] = [
         30,
@@ -31,6 +34,16 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                #if os(macOS)
+                    Section {
+                        Toggle("Show Menu Bar Item", isOn: $showsMenuBarExtra)
+                    } header: {
+                        Text("Menu Bar")
+                    } footer: {
+                        Text("Show McSrvrS in the menu bar for quick server status access.")
+                    }
+                #endif
+
                 Section {
                     Picker("Foreground Auto Refresh", selection: $foregroundRefreshInterval) {
                         ForEach(foregroundRefreshIntervalOptions, id: \.self) { option in
@@ -46,13 +59,7 @@ struct SettingsView: View {
                             userInfo: ["interval": newValue]
                         )
                     }
-                } header: {
-                    Text("Foreground Refresh")
-                } footer: {
-                    Text("Adjust how often the app updates server information while it is open.")
-                }
 
-                Section {
                     Picker("Background Auto Refresh", selection: $backgroundRefreshInterval) {
                         ForEach(backgroundRefreshIntervalOptions, id: \.self) { option in
                             refreshIntervalLabel(for: option)
@@ -60,10 +67,9 @@ struct SettingsView: View {
                         }
                     }
                     .pickerStyle(.menu)
+
                 } header: {
-                    Text("Background Refresh")
-                } footer: {
-                    Text("Adjust the earliest interval for background refresh scheduling.")
+                    Text("Refresh Interval")
                 }
             }
             .navigationTitle("Settings")
@@ -84,7 +90,7 @@ struct SettingsView: View {
             #endif
         }
         #if os(macOS)
-            .frame(width: 500, height: 360)
+            .frame(width: 500, height: 420)
         #endif
     }
 

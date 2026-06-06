@@ -61,6 +61,9 @@
         }
       }
     },
+    "Add servers in the main window to see them here." : {
+
+    },
     "Add your first Minecraft server to get started" : {
       "localizations" : {
         "zh-Hans" : {
@@ -70,9 +73,6 @@
           }
         }
       }
-    },
-    "Adjust how often the app updates server information while it is open." : {
-
     },
     "Adjust how often the app updates the servers' information." : {
       "extractionState" : "stale",
@@ -119,9 +119,6 @@
       }
     },
     "Background Auto Refresh" : {
-
-    },
-    "Background Refresh" : {
 
     },
     "Cancel" : {
@@ -274,9 +271,6 @@
         }
       }
     },
-    "Foreground Refresh" : {
-
-    },
     "Host" : {
       "localizations" : {
         "zh-Hans" : {
@@ -339,6 +333,9 @@
     },
     "McSrvrS" : {
       "shouldTranslate" : false
+    },
+    "Menu Bar" : {
+
     },
     "Message of the Day" : {
       "localizations" : {
@@ -440,6 +437,9 @@
         }
       }
     },
+    "No Servers" : {
+
+    },
     "No Servers Added" : {
       "localizations" : {
         "zh-Hans" : {
@@ -459,6 +459,9 @@
           }
         }
       }
+    },
+    "Open main window" : {
+
     },
     "Player Count" : {
       "localizations" : {
@@ -539,6 +542,9 @@
           }
         }
       }
+    },
+    "Refresh Interval" : {
+
     },
     "Refresh Settings" : {
       "extractionState" : "stale",
@@ -640,6 +646,12 @@
           }
         }
       }
+    },
+    "Show McSrvrS in the menu bar for quick server status access." : {
+
+    },
+    "Show Menu Bar Item" : {
+
     },
     "Time" : {
       "localizations" : {
