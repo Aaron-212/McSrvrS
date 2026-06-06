@@ -31,23 +31,6 @@ final class ServerStatus {
         let motd: String?
         let favicon: String?
         let latency: UInt64?
-
-        // Variable Color for SF Symbol
-        public var latencyVariableColor: Double {
-            guard let latency = latency else { return 0.0 }
-            switch latency {
-            case 0..<50:
-                return 1.0
-            case 50..<100:
-                return 0.75
-            case 100..<200:
-                return 0.5
-            case 200..<300:
-                return 0.25
-            default:
-                return 0.0
-            }
-        }
     }
 
     struct Version: Codable {

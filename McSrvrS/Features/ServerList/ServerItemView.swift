@@ -26,7 +26,7 @@ struct ServerItemView: View {
                     case .success(let statusData):
                         HStack {
                             HStack(spacing: 4) {
-                                Image(systemName: "cellularbars", variableValue: statusData.latencyVariableColor)
+                                Image(systemName: "cellularbars", variableValue: statusData.variableColor)
                                 if let latency = statusData.latency {
                                     Text(verbatim: "\(latency) ms")
                                 } else {
@@ -74,6 +74,26 @@ struct ServerItemView: View {
                     }
                 }
             }
+        }
+        #if os(macOS)
+            .padding(.vertical, 4)
+        #endif
+    }
+}
+
+extension ServerStatus.StatusData {
+    var variableColor: Double {
+        if let latency = self.latency {
+            switch latency {
+            case ..<50:
+                return 1.0
+            case 50..<1000:
+                return (Double(latency) - 150) / 850
+            default:
+                return 0.0
+            }
+        } else {
+            return 0.0
         }
     }
 }
