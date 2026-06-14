@@ -7,7 +7,7 @@ struct ServerDetailHeaderSection: View {
         VStack {
             server.faviconImage
                 .resizable()
-                .aspectRatio(contentMode: server.hasCustomFavicon ? .fit : .fill)
+                .aspectRatio(contentMode: .fit)
                 .frame(width: 80, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)

@@ -1,4 +1,3 @@
-import CachedAsyncImage
 import SwiftUI
 
 struct SectionView<Header: View, Content: View>: View {
@@ -61,11 +60,11 @@ struct PlayerItemView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            CachedAsyncImage(url: player.avatarUrl) { phase in
-                if case .success(let image) = phase {
+            AsyncImage(url: player.avatarUrl) { phase in
+                if let image = phase.image {
                     image
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .aspectRatio(contentMode: .fit)
                 } else {
                     Image("Steve")
                         .resizable()

@@ -8,6 +8,7 @@ struct ContentView: View {
     @Query(sort: \Server.orderIndex) private var servers: [Server]
     @State private var searchText = ""
     @State private var presentedSheet: ContentSheet?
+    @State private var selectedServerID: Server.ID? = nil
     @State private var showsOnlineOnly = false
 
     private var filter: ServerListFilter {
@@ -26,21 +27,9 @@ struct ContentView: View {
                 } else if filteredServers.isEmpty {
                     unavailableContent(hasServers: true)
                 } else {
-                    List {
+                    List(selection: $selectedServerID) {
                         ForEach(filteredServers) { server in
-                            NavigationLink {
-                                ServerDetailView(server: server)
-                            } label: {
-                                ServerItemView(server: server)
-                            }
-                            .swipeActions(edge: .leading) {
-                                Button {
-                                    Task { await ServerRefreshService.refresh(server) }
-                                } label: {
-                                    Label("Refresh", systemImage: "arrow.clockwise")
-                                }
-                                .tint(.accentColor)
-                            }
+                            serverRow(server)
                         }
                         .onDelete(perform: deleteServers)
                         .onMove(perform: moveServers)
@@ -82,11 +71,13 @@ struct ContentView: View {
                         }
                     }
                 #elseif os(macOS)
-                    ToolbarItem(placement: .automatic) {
-                        Button {
-                            Task { await refreshAllServers() }
-                        } label: {
-                            Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
+                    if #unavailable(anyAppleOS 26) {
+                        ToolbarItem(placement: .automatic) {
+                            Button {
+                                Task { await refreshAllServers() }
+                            } label: {
+                                Label("Refresh All Servers", systemImage: "arrow.trianglehead.2.clockwise")
+                            }
                         }
                     }
                     ToolbarItem(placement: .automatic) {
@@ -101,11 +92,16 @@ struct ContentView: View {
                 await refreshAllServers()
             }
         } detail: {
-            Text("Select a Server")
-                .font(.title)
-                .foregroundStyle(.tertiary)
-                .bold()
-                .navigationSplitViewColumnWidth(min: 320, ideal: 400)
+            if let selectedServerID {
+                ServerDetailView(serverID: selectedServerID)
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 400)
+            } else {
+                Text("Select a Server")
+                    .font(.title)
+                    .foregroundStyle(.tertiary)
+                    .bold()
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 400)
+            }
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search Servers")
         .sheet(item: $presentedSheet) { sheet in
@@ -123,6 +119,7 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .refreshAllServers)) { _ in
             Task { await refreshAllServers() }
         }
+        .onOpenURL(perform: openDeepLink)
     }
 
     private var filterServerButton: some View {
@@ -135,6 +132,29 @@ struct ContentView: View {
         Button(action: addServer) {
             Label("Add Server", systemImage: "plus")
         }
+    }
+
+    private func serverRow(_ server: Server) -> some View {
+        NavigationLink(value: server.id) {
+            ServerItemView(server: server)
+        }
+        .swipeActions(edge: .leading) {
+            refreshServerButton(serverID: server.id)
+        }
+    }
+
+    private func refreshServerButton(serverID: Server.ID) -> some View {
+        Button {
+            Task {
+                await ServerRefreshService.refresh(
+                    serverID,
+                    modelContainer: modelContext.container
+                )
+            }
+        } label: {
+            Label("Refresh", systemImage: "arrow.clockwise")
+        }
+        .tint(.accentColor)
     }
 
     private func unavailableContent(hasServers: Bool) -> some View {
@@ -183,7 +203,33 @@ struct ContentView: View {
     }
 
     private func refreshAllServers() async {
-        await ServerRefreshService.refreshAll(servers)
+        await ServerRefreshService.refreshAll(
+            servers.map(\.id),
+            modelContainer: modelContext.container
+        )
+    }
+
+    private func openDeepLink(_ url: URL) {
+        guard let serverID = ServerDeepLink.serverID(from: url) else { return }
+
+        presentedSheet = nil
+        searchText = ""
+        showsOnlineOnly = false
+        selectedServerID = serverID
+    }
+}
+
+private enum ServerDeepLink {
+    private static let scheme = "mcsrvrs"
+    private static let serverHost = "server"
+
+    static func serverID(from url: URL) -> UUID? {
+        guard url.scheme == scheme, url.host == serverHost else { return nil }
+
+        return url.pathComponents
+            .dropFirst()
+            .first
+            .flatMap(UUID.init(uuidString:))
     }
 }
 

@@ -3,104 +3,111 @@ import SwiftUI
 import WidgetKit
 
 struct Provider: AppIntentTimelineProvider {
+    typealias Intent = ConfigurationAppIntent
+    
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(
             date: Date(),
-            configuration: ConfigurationAppIntent(),
-            server: Server.placeholder,
-            loadError: nil
+            server: .placeholder,
         )
     }
 
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry {
-        if context.isPreview {
-            return SimpleEntry(
-                date: Date(),
-                configuration: configuration,
-                server: Server.placeholder,
-                loadError: nil
-            )
-        }
-
-        let selection = await WidgetServerStore.selection(
-            selectedServerID: configuration.server?.uuid
+    func snapshot(for configuration: Intent, in context: Context) async -> SimpleEntry {
+        let server = await fetchSnapshot(
+            for: configuration.server?.id
         )
         return SimpleEntry(
             date: Date(),
-            configuration: configuration,
-            server: selection.server,
-            loadError: selection.errorMessage
+            server: server ?? .placeholder,
         )
     }
 
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        let selection = await WidgetServerStore.selection(
-            selectedServerID: configuration.server?.uuid
+    func timeline(for configuration: Intent, in context: Context) async -> Timeline<SimpleEntry> {
+        let server = await fetchSnapshot(
+            for: configuration.server?.id
         )
         let entry = SimpleEntry(
             date: Date(),
-            configuration: configuration,
-            server: selection.server,
-            loadError: selection.errorMessage
+            server: server ?? .placeholder,
         )
-        let nextReloadDate = Date().addingTimeInterval(15 * 60)
 
-        return Timeline(entries: [entry], policy: .after(nextReloadDate))
+        return Timeline(entries: [entry], policy: .never)
     }
-}
 
-extension Server {
-    static var placeholder: Server {
-        return Server(name: "Example Server", address: "play.example.net", orderIndex: 1)
+    func fetchSnapshot(for identifier: SelectedServerEntity.ID?) async -> ServerSnapshot? {
+        guard let identifier else { return nil }
+
+        let container = WidgetModelContainer.shared
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<Server>(
+            predicate: #Predicate { $0.id == identifier }
+        )
+
+        let server = try? context.fetch(descriptor).first
+        return server.map(ServerSnapshot.init(server:))
     }
 }
 
 struct SimpleEntry: TimelineEntry {
-    let date: Date
-    let configuration: ConfigurationAppIntent
-    let server: Server?
-    let loadError: String?
+    var date: Date
+    var server: ServerSnapshot
 }
 
-struct WidgetServerSelection {
-    let server: Server?
-    let servers: [Server]
-    let errorMessage: String?
-}
+struct ServerSnapshot {
+    var id: UUID
+    var name: String
+    var address: String
+    var lastUpdatedDate: Date
+    var currentState: ServerStatus.StatusState
 
-@MainActor
-enum WidgetServerStore {
-    private static let modelContainerResult: Result<ModelContainer, Error> = Result {
-        try AppModelContainer.make(allowsSave: false)
+    init(
+        id: UUID,
+        name: String,
+        address: String,
+        lastUpdatedDate: Date,
+        currentState: ServerStatus.StatusState
+    ) {
+        self.id = id
+        self.name = name
+        self.address = address
+        self.lastUpdatedDate = lastUpdatedDate
+        self.currentState = currentState
     }
 
-    static func selection(selectedServerID: UUID? = nil) -> WidgetServerSelection {
-        do {
-            let container = try modelContainerResult.get()
-            let context = container.mainContext
-            let descriptor = FetchDescriptor<Server>(
-                sortBy: [
-                    SortDescriptor(\.orderIndex),
-                    SortDescriptor(\.name),
-                ]
-            )
-            let servers = try context.fetch(descriptor)
-            let selectedServer =
-                selectedServerID.flatMap { selectedServerID in
-                    servers.first { $0.id == selectedServerID }
-                } ?? servers.first
+    init(server: Server) {
+        self.init(
+            id: server.id,
+            name: server.name,
+            address: server.address,
+            lastUpdatedDate: server.lastUpdatedDate,
+            currentState: server.currentState
+        )
+    }
 
-            return WidgetServerSelection(
-                server: selectedServer,
-                servers: servers,
-                errorMessage: nil
-            )
-        } catch {
-            return WidgetServerSelection(
-                server: nil,
-                servers: [],
-                errorMessage: "Could not load servers"
-            )
+    static var placeholder: ServerSnapshot {
+        ServerSnapshot(
+            id: UUID(),
+            name: "Example Server",
+            address: "example.com",
+            lastUpdatedDate: .now,
+            currentState: .loading
+        )
+    }
+
+    var faviconImage: Image {
+        currentState.faviconImage
+    }
+}
+
+private enum ServerDeepLink {
+    private static let scheme = "mcsrvrs"
+    private static let serverHost = "server"
+
+    static func url(for serverID: UUID?) -> URL? {
+        if let serverID {
+            URL(string: "\(scheme)://\(serverHost)/\(serverID.uuidString)")
+        } else {
+            nil
         }
     }
 }
@@ -109,65 +116,67 @@ struct McSrvrS_WidgetsEntryView: View {
     var entry: Provider.Entry
 
     var body: some View {
-        HStack {
-            if let loadError = entry.loadError {
-                ContentUnavailableView(
-                    "Unavailable",
-                    systemImage: "externaldrive.badge.xmark",
-                    description: Text(loadError)
-                )
-            } else if let server = entry.server {
-                ServerItemWidgetView(server: server)
-            } else {
-                ContentUnavailableView(
-                    "No Servers",
-                    systemImage: "server.rack",
-                    description: Text("Add servers in McSrvrS")
-                )
-            }
-
-            Spacer()
-        }
+        ServerItemWidgetView(server: entry.server)
+            .widgetURL(ServerDeepLink.url(for: entry.server.id))
     }
 }
 
 struct ServerItemWidgetView: View {
-    let server: Server
+    @Environment(\.widgetFamily) private var sizeFamily
+    let server: ServerSnapshot
 
     var body: some View {
-        VStack(alignment: .leading) {
-            server.faviconImage
-                .resizable()
-                .widgetAccentedRenderingMode(.fullColor)
-                .aspectRatio(contentMode: server.hasCustomFavicon ? .fit : .fill)
-                .clipShape(.containerRelative)
+        HStack {
+            VStack(alignment: .leading) {
+                server.faviconImage
+                    .resizable()
+                    .widgetAccentedRenderingMode(.fullColor)
+                    .aspectRatio(contentMode: .fit)
+                    .clipShape(.containerRelative)
 
+                Text(server.name)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
 
-            Text(server.name)
-                .fontWeight(.semibold)
-                .lineLimit(1)
+                Text(server.lastUpdatedDate.formatted(.relative(presentation: .named)))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
 
-            Text(server.lastUpdatedDate.formatted(.relative(presentation: .named)))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+                Group {
+                    switch server.currentState {
+                    case .loading:
+                        Text("Loading")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
 
+                    case .success(let status):
+                        OnlineDisplayView(statusData: status)
+                            .font(.callout)
+                            .lineLimit(1)
 
-            Group {
+                    case .error(_):
+                        Text("Offline")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+
+            Spacer()
+
+            if sizeFamily == .systemMedium {
                 switch server.currentState {
                 case .loading:
-                    Text("Loading")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    Text("Loading server status")
 
                 case .success(let status):
-                    onlineDisplay(status)
-                        .font(.callout)
-                        .lineLimit(1)
+                    OnlinePlayersView(statusData: status)
 
-                case .error(_):
-                    Text("Offline")
+                case .error(let message):
+                    Text(message)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -175,8 +184,37 @@ struct ServerItemWidgetView: View {
             }
         }
     }
+}
 
-    private func onlineDisplay(_ statusData: ServerStatus.StatusData) -> some View {
+private struct OnlinePlayersView: View {
+    let statusData: ServerStatus.StatusData
+
+    var body: some View {
+        if let samples = statusData.players?.sample {
+            VStack(alignment: .trailing) {
+                Text("Online")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                ForEach(samples.prefix(3), id: \.playerId) { player in
+                    Text(player.name)
+                        .font(.callout)
+                        .lineLimit(1)
+                }
+            }
+        } else {
+            Text("No player samples available.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: 110, alignment: .leading)
+        }
+    }
+}
+
+private struct OnlineDisplayView: View {
+    let statusData: ServerStatus.StatusData
+
+    var body: some View {
         VStack {
             HStack(spacing: 4) {
                 Image(systemName: "cellularbars", variableValue: statusData.variableColor)
@@ -226,6 +264,101 @@ struct McSrvrS_Widgets: Widget {
             McSrvrS_WidgetsEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .supportedFamilies([.systemSmall])
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
+}
+
+private extension ServerSnapshot {
+    static var previewOnline: ServerSnapshot {
+        preview(
+            name: "Survival Realm",
+            lastUpdatedDate: Date.now.addingTimeInterval(-45),
+            state: .success(.previewOnline)
+        )
+    }
+
+    static var previewOffline: ServerSnapshot {
+        preview(
+            name: "Creative Build",
+            lastUpdatedDate: Date.now.addingTimeInterval(-8 * 60),
+            state: .error("Connection timed out")
+        )
+    }
+
+    static var previewLoading: ServerSnapshot {
+        ServerSnapshot(
+            id: UUID(),
+            name: "Minigames Hub",
+            address: "minigames.hello",
+            lastUpdatedDate: Date.now.addingTimeInterval(-15),
+            currentState: .loading
+        )
+    }
+
+    static func preview(
+        name: String,
+        lastUpdatedDate: Date,
+        state: ServerStatus.StatusState
+    ) -> ServerSnapshot {
+        ServerSnapshot(
+            id: UUID(),
+            name: name,
+            address: "example.com",
+            lastUpdatedDate: lastUpdatedDate,
+            currentState: state
+        )
+    }
+}
+
+private extension ServerStatus.StatusData {
+    static var previewOnline: ServerStatus.StatusData {
+        ServerStatus.StatusData(
+            version: ServerStatus.Version(name: "1.21.6", protocol: 770),
+            players: ServerStatus.Players(
+                max: 80,
+                online: 12,
+                sample: [
+                    ServerStatus.Player(
+                        name: "Alex",
+                        playerId: "ec561538-f3fd-461d-aff5-086b22154bce"
+                    ),
+                    ServerStatus.Player(
+                        name: "Steve",
+                        playerId: "8667ba71-b85a-4004-af54-457a9734eed7"
+                    ),
+                    ServerStatus.Player(
+                        name: "Builder212",
+                        playerId: "00000000-0000-0000-0000-000000000000"
+                    ),
+                ]
+            ),
+            motd: "A preview Minecraft server",
+            favicon: nil,
+            latency: 42
+        )
+    }
+}
+
+#Preview("Online Small", as: .systemSmall) {
+    McSrvrS_Widgets()
+} timeline: {
+    SimpleEntry(date: .now, server: .previewOnline)
+}
+
+#Preview("Online Medium", as: .systemMedium) {
+    McSrvrS_Widgets()
+} timeline: {
+    SimpleEntry(date: .now, server: .previewOnline)
+}
+
+#Preview("Offline Medium", as: .systemMedium) {
+    McSrvrS_Widgets()
+} timeline: {
+    SimpleEntry(date: .now, server: .previewOffline)
+}
+
+#Preview("Loading Small", as: .systemSmall) {
+    McSrvrS_Widgets()
+} timeline: {
+    SimpleEntry(date: .now, server: .previewLoading)
 }

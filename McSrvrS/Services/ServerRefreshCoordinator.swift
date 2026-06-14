@@ -9,20 +9,44 @@ import SwiftUI
     import WidgetKit
 #endif
 
-@MainActor
-enum ServerRefreshService {
-    static func refresh(_ server: Server) async {
-        await server.updateStatus()
+actor ServerRefreshService {
+    @MainActor
+    static func refresh(
+        _ serverID: Server.ID,
+        modelContainer: ModelContainer = AppModelContainer.shared
+    ) async {
+        do {
+            guard let server = try fetchServer(with: serverID, in: modelContainer.mainContext) else {
+                log.error("Could not find server to refresh: \(serverID)")
+                return
+            }
+
+            await server.updateStatus()
+        } catch {
+            log.error("Server refresh failed: \(error)")
+        }
     }
 
-    static func refreshAll(_ servers: [Server]) async {
-        await withTaskGroup(of: Void.self) { group in
-            for server in servers {
-                group.addTask {
-                    await server.updateStatus()
-                }
-            }
+    @MainActor
+    static func refreshAll(
+        _ serverIDs: [Server.ID],
+        modelContainer: ModelContainer = AppModelContainer.shared
+    ) async {
+        for serverID in serverIDs {
+            await refresh(serverID, modelContainer: modelContainer)
         }
+    }
+
+    @MainActor
+    private static func fetchServer(with serverID: Server.ID, in context: ModelContext) throws -> Server? {
+        var descriptor = FetchDescriptor<Server>(
+            predicate: #Predicate { server in
+                server.id == serverID
+            }
+        )
+        descriptor.fetchLimit = 1
+
+        return try context.fetch(descriptor).first
     }
 }
 
@@ -43,7 +67,10 @@ final class ServerRefreshCoordinator {
         do {
             let context = modelContainer.mainContext
             let servers = try context.fetch(FetchDescriptor<Server>())
-            await ServerRefreshService.refreshAll(servers)
+            await ServerRefreshService.refreshAll(
+                servers.map(\.id),
+                modelContainer: modelContainer
+            )
             reloadWidgetTimelines()
         } catch {
             log.error("Server refresh failed: \(error)")

@@ -11,8 +11,6 @@
 		8DA89D0B2FD44FDD003DD4A9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DA89D0A2FD44FDD003DD4A9 /* WidgetKit.framework */; };
 		8DA89D0D2FD44FDD003DD4A9 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DA89D0C2FD44FDD003DD4A9 /* SwiftUI.framework */; };
 		8DA89D1A2FD44FDF003DD4A9 /* McSrvrS WidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8DA89D082FD44FDD003DD4A9 /* McSrvrS WidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		8DAA00012FD46000003DD4A9 /* McSrvrS/App/AppModelContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAA00042FD46000003DD4A9 /* McSrvrS/App/AppModelContainer.swift */; };
-		8DC552022E23F68800FC9242 /* CachedAsyncImage in Frameworks */ = {isa = PBXBuildFile; productRef = 8DC552012E23F68800FC9242 /* CachedAsyncImage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,9 +42,6 @@
 		8DA89D082FD44FDD003DD4A9 /* McSrvrS WidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "McSrvrS WidgetsExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DA89D0A2FD44FDD003DD4A9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
 		8DA89D0C2FD44FDD003DD4A9 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
-		8DAA00042FD46000003DD4A9 /* McSrvrS/App/AppModelContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = McSrvrS/App/AppModelContainer.swift; sourceTree = "<group>"; };
-		8DAA00052FD46000003DD4A9 /* McSrvrS/Domain/Models/Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = McSrvrS/Domain/Models/Server.swift; sourceTree = "<group>"; };
-		8DAA00062FD46000003DD4A9 /* McSrvrS/Domain/Models/ServerStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = McSrvrS/Domain/Models/ServerStatus.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -63,6 +58,7 @@
 				Assets.xcassets,
 				Domain/Models/Server.swift,
 				Domain/Models/ServerStatus.swift,
+				Localizable.xcstrings,
 				Shared/Views/FaviconView.swift,
 			);
 			target = 8DA89D072FD44FDD003DD4A9 /* McSrvrS WidgetsExtension */;
@@ -101,7 +97,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DC552022E23F68800FC9242 /* CachedAsyncImage in Frameworks */,
 				8DA89D032FD42194003DD4A9 /* AsyncDNSResolver in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -123,7 +118,6 @@
 			children = (
 				8D5E8D432E20BCBF007603B3 /* McSrvrS */,
 				8DA89D0E2FD44FDD003DD4A9 /* McSrvrS Widgets */,
-				8DAA00072FD46000003DD4A9 /* Shared Widget Sources */,
 				8DA89D092FD44FDD003DD4A9 /* Frameworks */,
 				8D5E8D422E20BCBF007603B3 /* Products */,
 			);
@@ -145,16 +139,6 @@
 				8DA89D0C2FD44FDD003DD4A9 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		8DAA00072FD46000003DD4A9 /* Shared Widget Sources */ = {
-			isa = PBXGroup;
-			children = (
-				8DAA00042FD46000003DD4A9 /* McSrvrS/App/AppModelContainer.swift */,
-				8DAA00052FD46000003DD4A9 /* McSrvrS/Domain/Models/Server.swift */,
-				8DAA00062FD46000003DD4A9 /* McSrvrS/Domain/Models/ServerStatus.swift */,
-			);
-			name = "Shared Widget Sources";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,7 +163,6 @@
 			);
 			name = McSrvrS;
 			packageProductDependencies = (
-				8DC552012E23F68800FC9242 /* CachedAsyncImage */,
 				8DA89D022FD42194003DD4A9 /* AsyncDNSResolver */,
 			);
 			productName = "mc-server-status";
@@ -216,7 +199,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2650;
-				LastUpgradeCheck = 2650;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					8D5E8D402E20BCBF007603B3 = {
 						CreatedOnToolsVersion = 26.0;
@@ -237,7 +220,6 @@
 			mainGroup = 8D5E8D382E20BCBF007603B3;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */,
 				8DA89D012FD42194003DD4A9 /* XCRemoteSwiftPackageReference "swift-async-dns-resolver" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -280,7 +262,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DAA00012FD46000003DD4A9 /* McSrvrS/App/AppModelContainer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,6 +335,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -412,6 +394,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 			};
@@ -570,6 +553,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "personal.aaron212.mcsrvrs.McSrvrS-Widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -615,6 +599,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "personal.aaron212.mcsrvrs.McSrvrS-Widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -670,14 +655,6 @@
 				minimumVersion = 0.7.0;
 			};
 		};
-		8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/lorenzofiamingo/swiftui-cached-async-image";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.1.1;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -685,11 +662,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8DA89D012FD42194003DD4A9 /* XCRemoteSwiftPackageReference "swift-async-dns-resolver" */;
 			productName = AsyncDNSResolver;
-		};
-		8DC552012E23F68800FC9242 /* CachedAsyncImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8DC552002E23F68800FC9242 /* XCRemoteSwiftPackageReference "swiftui-cached-async-image" */;
-			productName = CachedAsyncImage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

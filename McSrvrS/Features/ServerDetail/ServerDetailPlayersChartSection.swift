@@ -121,7 +121,7 @@ struct ServerDetailPlayersChartSection: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .frame(maxWidth: .infinity)
+                .buttonSizing(.flexible)
 
                 HStack {
                     VStack(alignment: .leading) {
@@ -137,6 +137,7 @@ struct ServerDetailPlayersChartSection: View {
                         }
                         .font(.title)
                         .bold()
+                        
                         Text(snapshot.domain.description)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -155,9 +156,9 @@ struct ServerDetailPlayersChartSection: View {
                                 RuleMark(
                                     x: .value("Time", dataPoint.timestamp)
                                 )
-                                .foregroundStyle(.gray.secondary)
+                                .foregroundStyle(.secondary)
                                 .annotation(
-                                    spacing: 11,
+                                    spacing: 12,
                                     overflowResolution: .init(x: .fit, y: .disabled)
                                 ) {
                                     dataPointAnnotation(for: dataPoint)
@@ -251,6 +252,7 @@ struct ServerDetailPlayersChartSection: View {
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                         }
+                        .frame(height: 240)
                         .padding()
                     }
                 }

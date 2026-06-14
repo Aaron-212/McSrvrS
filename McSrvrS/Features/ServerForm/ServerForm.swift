@@ -91,7 +91,10 @@ struct ServerForm: View {
             try modelContext.save()
 
             Task {
-                await ServerRefreshService.refresh(savedServer)
+                await ServerRefreshService.refresh(
+                    savedServer.id,
+                    modelContainer: modelContext.container
+                )
             }
 
             dismiss()

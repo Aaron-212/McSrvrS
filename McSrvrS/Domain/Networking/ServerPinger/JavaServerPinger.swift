@@ -10,7 +10,10 @@ actor JavaServerPinger: ServerPinger {
     private let logger: Logger
 
     private init() {
-        self.logger = Logger(subsystem: "personal.aaron212.mcsrv", category: "JavaServerPinger")
+        self.logger = Logger(
+            subsystem: "personal.aaron212.mcsrv",
+            category: "JavaServerPinger"
+        )
     }
 
     private struct JavaStatusPlayerResponse: Codable {
@@ -55,13 +58,28 @@ actor JavaServerPinger: ServerPinger {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
-            version = try container.decode(ServerStatus.Version.self, forKey: .version)
-            players = try container.decodeIfPresent(JavaStatusPlayersResponse.self, forKey: .players)
-            favicon = try container.decodeIfPresent(String.self, forKey: .favicon)
+            version = try container.decode(
+                ServerStatus.Version.self,
+                forKey: .version
+            )
+            players = try container.decodeIfPresent(
+                JavaStatusPlayersResponse.self,
+                forKey: .players
+            )
+            favicon = try container.decodeIfPresent(
+                String.self,
+                forKey: .favicon
+            )
 
-            if let motdString = try? container.decode(String.self, forKey: .motd) {
+            if let motdString = try? container.decode(
+                String.self,
+                forKey: .motd
+            ) {
                 motd = motdString
-            } else if let motdObject = try? container.decode([String: String].self, forKey: .motd),
+            } else if let motdObject = try? container.decode(
+                [String: String].self,
+                forKey: .motd
+            ),
                 let text = motdObject["text"]
             {
                 motd = text
@@ -90,7 +108,9 @@ actor JavaServerPinger: ServerPinger {
 
         static func parse(_ jsonString: String) -> Result<Self, Error> {
             guard let data = jsonString.data(using: .utf8) else {
-                return .failure(NSError(domain: "InvalidString", code: 1, userInfo: nil))
+                return .failure(
+                    NSError(domain: "InvalidString", code: 1, userInfo: nil)
+                )
             }
 
             do {
@@ -116,7 +136,8 @@ actor JavaServerPinger: ServerPinger {
             return await openConnectionAndPing(resolvedAddress: directAddress)
         }
 
-        if let srvAddress = await MinecraftSRVResolver.resolveSRV(serverAddress) {
+        if let srvAddress = await MinecraftSRVResolver.resolveSRV(serverAddress)
+        {
             return await openConnectionAndPing(resolvedAddress: srvAddress)
         }
 
@@ -155,11 +176,15 @@ actor JavaServerPinger: ServerPinger {
                                     port: port
                                 )
                                 connection.cancel()
-                                connectionState.resume(returning: .success(statusData))
+                                connectionState.resume(
+                                    returning: .success(statusData)
+                                )
                             } catch {
                                 connection.cancel()
                                 connectionState.resume(
-                                    returning: .failure(await Self.pingerError(from: error))
+                                    returning: .failure(
+                                        await Self.pingerError(from: error)
+                                    )
                                 )
                             }
                         }
@@ -167,7 +192,9 @@ actor JavaServerPinger: ServerPinger {
                         connection.stateUpdateHandler = nil
                         connection.cancel()
                         connectionState.resume(
-                            returning: .failure(ServerPingerError.connectionFailed(error))
+                            returning: .failure(
+                                ServerPingerError.connectionFailed(error)
+                            )
                         )
                     case .cancelled:
                         connection.stateUpdateHandler = nil
@@ -192,7 +219,11 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Perform the complete ping sequence
-    private func performPing(connection: NWConnection, host: String, port: UInt16) async throws
+    private func performPing(
+        connection: NWConnection,
+        host: String,
+        port: UInt16
+    ) async throws
         -> ServerStatus.StatusData
     {
         try await sendHandshake(connection: connection, host: host, port: port)
@@ -204,15 +235,21 @@ actor JavaServerPinger: ServerPinger {
         let jsonString = try await readStatusResponse(connection: connection)
         logger.debug("Status response received from \(host):\(port)")
 
-        let latency = try await sendPingAndMeasureLatency(connection: connection)
-        logger.debug("Ping response received from \(host):\(port) with latency \(latency) ms")
+        let latency = try await sendPingAndMeasureLatency(
+            connection: connection
+        )
+        logger.debug(
+            "Ping response received from \(host):\(port) with latency \(latency) ms"
+        )
 
         switch JavaStatusResponse.parse(jsonString) {
         case .success(let response):
             logger.info("Ping successful for \(host):\(port)")
             return response.toStatusData(latency: UInt64(latency))
         case .failure(let error):
-            logger.error("Failed to parse status JSON: \(error.localizedDescription)")
+            logger.error(
+                "Failed to parse status JSON: \(error.localizedDescription)"
+            )
             throw ServerPingerError.dataError(
                 "Failed to parse status JSON: \(error.localizedDescription)"
             )
@@ -228,7 +265,11 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Send handshake packet
-    private func sendHandshake(connection: NWConnection, host: String, port: UInt16) async throws {
+    private func sendHandshake(
+        connection: NWConnection,
+        host: String,
+        port: UInt16
+    ) async throws {
         var data = Data()
 
         // Packet ID (0x00 for handshake)
@@ -258,8 +299,13 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Read status response
-    private func readStatusResponse(connection: NWConnection) async throws -> String {
-        let data = try await readPacket(connection: connection, includesStringLength: true)
+    private func readStatusResponse(connection: NWConnection) async throws
+        -> String
+    {
+        let data = try await readPacket(
+            connection: connection,
+            includesStringLength: true
+        )
 
         guard let jsonString = String(data: data, encoding: .utf8) else {
             throw ServerPingerError.encodingError
@@ -269,25 +315,31 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Send ping packet and measure latency
-    private func sendPingAndMeasureLatency(connection: NWConnection) async throws -> Int {
-        let startTime = Int(Date().timeIntervalSince1970 * 1000)  // Current time in milliseconds
+    private func sendPingAndMeasureLatency(connection: NWConnection)
+        async throws -> Int64
+    {
+        let elapsedTime = try await ContinuousClock().measure {
+            let startTime = Int(Date().timeIntervalSince1970 * 1000)  // Current time in milliseconds
 
-        var pingData = Data()
-        pingData.append(packVarInt(1))  // Packet ID 0x01 for ping
+            var pingData = Data()
+            pingData.append(packVarInt(1))  // Packet ID 0x01 for ping
 
-        // Add timestamp (8 bytes, big endian)
-        let timestamp = UInt64(startTime).bigEndian
-        withUnsafeBytes(of: timestamp) { bytes in
-            pingData.append(Data(bytes))
+            // Add timestamp (8 bytes, big endian)
+            let timestamp = UInt64(startTime).bigEndian
+            withUnsafeBytes(of: timestamp) { bytes in
+                pingData.append(Data(bytes))
+            }
+
+            try await sendData(connection: connection, data: pingData)
+
+            // Read pong response
+            _ = try await readPacket(
+                connection: connection,
+                includesStringLength: false
+            )
         }
 
-        try await sendData(connection: connection, data: pingData)
-
-        // Read pong response
-        _ = try await readPacket(connection: connection, includesStringLength: false)
-
-        let endTime = Int(Date().timeIntervalSince1970 * 1000)
-        return endTime - startTime
+        return await elapsedTime.milliseconds
     }
 
     // Send data with length prefix
@@ -302,7 +354,9 @@ actor JavaServerPinger: ServerPinger {
                 content: packet,
                 completion: .contentProcessed { error in
                     if let error = error {
-                        continuation.resume(throwing: ServerPingerError.connectionFailed(error))
+                        continuation.resume(
+                            throwing: ServerPingerError.connectionFailed(error)
+                        )
                     } else {
                         continuation.resume()
                     }
@@ -312,7 +366,10 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Read a complete packet
-    private func readPacket(connection: NWConnection, includesStringLength: Bool) async throws -> Data {
+    private func readPacket(
+        connection: NWConnection,
+        includesStringLength: Bool
+    ) async throws -> Data {
         // Read packet length
         let packetLength = try await unpackVarInt(connection: connection)
 
@@ -328,11 +385,17 @@ actor JavaServerPinger: ServerPinger {
             remainingLength -= varIntSize(jsonLength)
 
             // Read the JSON string
-            resultData = try await readBytes(connection: connection, count: jsonLength)
+            resultData = try await readBytes(
+                connection: connection,
+                count: jsonLength
+            )
         } else {
             // For ping response, read remaining data
             if remainingLength > 0 {
-                resultData = try await readBytes(connection: connection, count: remainingLength)
+                resultData = try await readBytes(
+                    connection: connection,
+                    count: remainingLength
+                )
             }
         }
 
@@ -340,20 +403,29 @@ actor JavaServerPinger: ServerPinger {
     }
 
     // Read exact number of bytes
-    private func readBytes(connection: NWConnection, count: Int) async throws -> Data {
+    private func readBytes(connection: NWConnection, count: Int) async throws
+        -> Data
+    {
         return try await withCheckedThrowingContinuation { continuation in
-            connection.receive(minimumIncompleteLength: count, maximumLength: count) {
+            connection.receive(
+                minimumIncompleteLength: count,
+                maximumLength: count
+            ) {
                 data,
                 _,
                 isComplete,
                 error in
                 if let error = error {
-                    continuation.resume(throwing: ServerPingerError.connectionFailed(error))
+                    continuation.resume(
+                        throwing: ServerPingerError.connectionFailed(error)
+                    )
                 } else if let data = data, data.count == count {
                     continuation.resume(returning: data)
                 } else {
                     continuation.resume(
-                        throwing: ServerPingerError.dataError("Incomplete data received")
+                        throwing: ServerPingerError.dataError(
+                            "Incomplete data received"
+                        )
                     )
                 }
             }
@@ -413,11 +485,14 @@ actor JavaServerPinger: ServerPinger {
 
 private nonisolated final class PingConnectionState: @unchecked Sendable {
     private let lock = NSLock()
-    private var continuation: CheckedContinuation<JavaServerPinger.PingResult, Never>?
+    private var continuation:
+        CheckedContinuation<JavaServerPinger.PingResult, Never>?
     private var pendingResult: JavaServerPinger.PingResult?
     private var didResume = false
 
-    func setContinuation(_ continuation: CheckedContinuation<JavaServerPinger.PingResult, Never>) {
+    func setContinuation(
+        _ continuation: CheckedContinuation<JavaServerPinger.PingResult, Never>
+    ) {
         lock.lock()
 
         if didResume {
@@ -450,5 +525,13 @@ private nonisolated final class PingConnectionState: @unchecked Sendable {
         lock.unlock()
 
         continuation?.resume(returning: result)
+    }
+}
+
+extension Duration {
+    var milliseconds: Int64 {
+        let c = components
+        return c.seconds * 1_000
+            + Int64(c.attoseconds / 1_000_000_000_000_000)
     }
 }

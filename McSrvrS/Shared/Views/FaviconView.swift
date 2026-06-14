@@ -12,7 +12,7 @@ struct FaviconView: View {
     var body: some View {
         serverState.faviconImage
             .resizable()
-            .aspectRatio(contentMode: serverState.hasCustomFavicon ? .fit : .fill)
+            .aspectRatio(contentMode: .fit)
     }
 }
 

@@ -7,7 +7,7 @@ struct ServerItemView: View {
         HStack {
             server.faviconImage
                 .resizable()
-                .aspectRatio(contentMode: server.hasCustomFavicon ? .fit : .fill)
+                .aspectRatio(contentMode: .fit)
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             

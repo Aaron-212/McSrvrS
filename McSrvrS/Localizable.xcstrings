@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@" : {
+
+    },
     "%@ to %@" : {
       "localizations" : {
         "en" : {
@@ -204,6 +207,9 @@
         }
       }
     },
+    "Displays the latest saved Minecraft server statuses." : {
+
+    },
     "Done" : {
       "localizations" : {
         "zh-Hans" : {
@@ -314,6 +320,12 @@
         }
       }
     },
+    "Loading" : {
+
+    },
+    "Loading server status" : {
+
+    },
     "McSrvrS" : {
       "shouldTranslate" : false
     },
@@ -346,6 +358,9 @@
           }
         }
       }
+    },
+    "Name" : {
+
     },
     "Never" : {
       "localizations" : {
@@ -407,6 +422,9 @@
         }
       }
     },
+    "No player samples available." : {
+
+    },
     "No players currently online" : {
       "localizations" : {
         "zh-Hans" : {
@@ -456,6 +474,12 @@
           }
         }
       }
+    },
+    "Offline" : {
+
+    },
+    "Online" : {
+
     },
     "Open main window" : {
       "localizations" : {
@@ -610,6 +634,12 @@
         }
       }
     },
+    "Server" : {
+
+    },
+    "Server ${server}" : {
+
+    },
     "Server Details" : {
       "localizations" : {
         "zh-Hans" : {
@@ -629,6 +659,9 @@
           }
         }
       }
+    },
+    "Server Not Found" : {
+
     },
     "Server Status" : {
       "localizations" : {
@@ -669,6 +702,9 @@
           }
         }
       }
+    },
+    "The selected server may have been deleted." : {
+
     },
     "Time" : {
       "localizations" : {

@@ -1,11 +1,11 @@
 import SwiftData
 
-actor AppModelContainer {
+actor WidgetModelContainer {
     static let appGroupIdentifier = "group.aaron212.mcsrvrs"
 
     static let shared: ModelContainer = {
         do {
-            return try make()
+            return try make(allowsSave: false)
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

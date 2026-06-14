@@ -7,6 +7,7 @@ import SwiftData
 @Model
 final class Server {
     // Calculated
+    @Attribute(.unique)
     var id: UUID
     var orderIndex: Int
     // User defined
@@ -57,6 +58,11 @@ final class Server {
             address: address
         )
 
+        if case .failure(.cancelled) = pingResult {
+            discardStatusUpdate(status)
+            return
+        }
+
         switch pingResult {
         case .success(let statusData):
             status.state = .success(statusData)
@@ -75,6 +81,11 @@ final class Server {
     }
 
     // MARK: - Cleanup
+
+    private func discardStatusUpdate(_ status: ServerStatus) {
+        statuses.removeAll { $0 === status }
+        modelContext?.delete(status)
+    }
 
     private func cleanupOldStatuses() {
         guard let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date.now) else {

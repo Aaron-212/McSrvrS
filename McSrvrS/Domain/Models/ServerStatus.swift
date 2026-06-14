@@ -3,6 +3,7 @@ import SwiftData
 
 @Model
 final class ServerStatus {
+    @Attribute(.unique)
     var id: UUID
     var server: Server?
     var timestamp: Date
@@ -47,7 +48,7 @@ final class ServerStatus {
             if self.playerId == "00000000-0000-0000-0000-000000000000" {
                 return nil  // No avatar for anonymous players
             } else {
-                return URL(string: "https://mc-heads.net/avatar/\(self.playerId)")
+                return URL(string: "https://crafatar.com/avatar/\(self.playerId)?size=64&overlay")
             }
         }
 
