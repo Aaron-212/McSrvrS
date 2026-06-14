@@ -14,6 +14,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		8D4EDEBD2FDEDEB4004208DB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8D5E8D392E20BCBF007603B3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D5E8D402E20BCBF007603B3;
+			remoteInfo = McSrvrS;
+		};
 		8DA89D182FD44FDF003DD4A9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8D5E8D392E20BCBF007603B3 /* Project object */;
@@ -38,6 +45,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8D4EDEB92FDEDEB4004208DB /* McSrvrSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = McSrvrSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D5E8D412E20BCBF007603B3 /* McSrvrS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = McSrvrS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DA89D082FD44FDD003DD4A9 /* McSrvrS WidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "McSrvrS WidgetsExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DA89D0A2FD44FDD003DD4A9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
@@ -73,6 +81,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		8D4EDEBA2FDEDEB4004208DB /* McSrvrSTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = McSrvrSTests;
+			sourceTree = "<group>";
+		};
 		8D5E8D432E20BCBF007603B3 /* McSrvrS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -93,6 +106,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		8D4EDEB62FDEDEB4004208DB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D5E8D3E2E20BCBF007603B3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -118,6 +138,7 @@
 			children = (
 				8D5E8D432E20BCBF007603B3 /* McSrvrS */,
 				8DA89D0E2FD44FDD003DD4A9 /* McSrvrS Widgets */,
+				8D4EDEBA2FDEDEB4004208DB /* McSrvrSTests */,
 				8DA89D092FD44FDD003DD4A9 /* Frameworks */,
 				8D5E8D422E20BCBF007603B3 /* Products */,
 			);
@@ -128,6 +149,7 @@
 			children = (
 				8D5E8D412E20BCBF007603B3 /* McSrvrS.app */,
 				8DA89D082FD44FDD003DD4A9 /* McSrvrS WidgetsExtension.appex */,
+				8D4EDEB92FDEDEB4004208DB /* McSrvrSTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -144,6 +166,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		8D4EDEB82FDEDEB4004208DB /* McSrvrSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8D4EDEC12FDEDEB4004208DB /* Build configuration list for PBXNativeTarget "McSrvrSTests" */;
+			buildPhases = (
+				8D4EDEB52FDEDEB4004208DB /* Sources */,
+				8D4EDEB62FDEDEB4004208DB /* Frameworks */,
+				8D4EDEB72FDEDEB4004208DB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8D4EDEBE2FDEDEB4004208DB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				8D4EDEBA2FDEDEB4004208DB /* McSrvrSTests */,
+			);
+			name = McSrvrSTests;
+			packageProductDependencies = (
+			);
+			productName = McSrvrSTests;
+			productReference = 8D4EDEB92FDEDEB4004208DB /* McSrvrSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		8D5E8D402E20BCBF007603B3 /* McSrvrS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8D5E8D4E2E20BCC2007603B3 /* Build configuration list for PBXNativeTarget "McSrvrS" */;
@@ -198,9 +243,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2650;
+				LastSwiftUpdateCheck = 2700;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					8D4EDEB82FDEDEB4004208DB = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 8D5E8D402E20BCBF007603B3;
+					};
 					8D5E8D402E20BCBF007603B3 = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -229,11 +278,19 @@
 			targets = (
 				8D5E8D402E20BCBF007603B3 /* McSrvrS */,
 				8DA89D072FD44FDD003DD4A9 /* McSrvrS WidgetsExtension */,
+				8D4EDEB82FDEDEB4004208DB /* McSrvrSTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		8D4EDEB72FDEDEB4004208DB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D5E8D3F2E20BCBF007603B3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -251,6 +308,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		8D4EDEB52FDEDEB4004208DB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D5E8D3D2E20BCBF007603B3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -268,6 +332,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		8D4EDEBE2FDEDEB4004208DB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D5E8D402E20BCBF007603B3 /* McSrvrS */;
+			targetProxy = 8D4EDEBD2FDEDEB4004208DB /* PBXContainerItemProxy */;
+		};
 		8DA89D192FD44FDF003DD4A9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8DA89D072FD44FDD003DD4A9 /* McSrvrS WidgetsExtension */;
@@ -276,6 +345,60 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		8D4EDEBF2FDEDEB4004208DB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4WG9P84KNJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = personal.aaron212.McSrvrSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/McSrvrS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/McSrvrS";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
+		};
+		8D4EDEC02FDEDEB4004208DB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4WG9P84KNJ;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = personal.aaron212.McSrvrSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/McSrvrS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/McSrvrS";
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
+		};
 		8D5E8D4C2E20BCC2007603B3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -438,10 +561,10 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = personal.aaron212.mcsrvrs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -499,10 +622,10 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = personal.aaron212.mcsrvrs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -538,7 +661,7 @@
 				INFOPLIST_FILE = "McSrvrS Widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "McSrvrS Widgets";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -549,7 +672,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "personal.aaron212.mcsrvrs.McSrvrS-Widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -557,13 +680,14 @@
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG WIDGET_EXTENSION";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.5;
 			};
 			name = Debug;
@@ -584,7 +708,7 @@
 				INFOPLIST_FILE = "McSrvrS Widgets/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "McSrvrS Widgets";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -595,7 +719,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "personal.aaron212.mcsrvrs.McSrvrS-Widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -603,13 +727,14 @@
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.5;
 			};
 			name = Release;
@@ -617,6 +742,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		8D4EDEC12FDEDEB4004208DB /* Build configuration list for PBXNativeTarget "McSrvrSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8D4EDEBF2FDEDEB4004208DB /* Debug */,
+				8D4EDEC02FDEDEB4004208DB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		8D5E8D3C2E20BCBF007603B3 /* Build configuration list for PBXProject "McSrvrS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
