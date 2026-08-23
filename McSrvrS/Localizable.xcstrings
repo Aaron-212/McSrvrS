@@ -359,9 +359,6 @@
         }
       }
     },
-    "Name" : {
-
-    },
     "Never" : {
       "localizations" : {
         "zh-Hans" : {
@@ -635,9 +632,6 @@
       }
     },
     "Server" : {
-
-    },
-    "Server ${server}" : {
 
     },
     "Server Details" : {

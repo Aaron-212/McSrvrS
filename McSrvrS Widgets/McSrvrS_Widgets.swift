@@ -2,8 +2,9 @@ import SwiftData
 import SwiftUI
 import WidgetKit
 
-struct Provider: AppIntentTimelineProvider {
+struct TimelineProvider: AppIntentTimelineProvider {
     typealias Intent = ConfigurationAppIntent
+    typealias Entry = SimpleEntry
     
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(
@@ -14,37 +15,57 @@ struct Provider: AppIntentTimelineProvider {
 
     func snapshot(for configuration: Intent, in context: Context) async -> SimpleEntry {
         let server = await fetchSnapshot(
-            for: configuration.server?.id
+            for: configuration.server?.serverID
         )
         return SimpleEntry(
             date: Date(),
-            server: server ?? .placeholder,
+            server: server,
         )
     }
 
     func timeline(for configuration: Intent, in context: Context) async -> Timeline<SimpleEntry> {
         let server = await fetchSnapshot(
-            for: configuration.server?.id
+            for: configuration.server?.serverID
         )
         let entry = SimpleEntry(
             date: Date(),
-            server: server ?? .placeholder,
+            server: server,
         )
 
         return Timeline(entries: [entry], policy: .never)
     }
 
-    func fetchSnapshot(for identifier: SelectedServerEntity.ID?) async -> ServerSnapshot? {
-        guard let identifier else { return nil }
-
+    func fetchSnapshot(for identifier: UUID?) async -> ServerSnapshot {
         let container = WidgetModelContainer.shared
         let context = ModelContext(container)
+
+        if let identifier,
+           let selectedServer = fetchServer(with: identifier, in: context) {
+            return ServerSnapshot(server: selectedServer)
+        }
+
+        if let firstServer = fetchFirstServer(in: context) {
+            return ServerSnapshot(server: firstServer)
+        }
+
+        return .placeholder
+    }
+
+    private func fetchServer(with identifier: UUID, in context: ModelContext) -> Server? {
         let descriptor = FetchDescriptor<Server>(
-            predicate: #Predicate { $0.id == identifier }
+            predicate: #Predicate { $0.id == identifier },
+            sortBy: [SortDescriptor(\.orderIndex)]
         )
 
-        let server = try? context.fetch(descriptor).first
-        return server.map(ServerSnapshot.init(server:))
+        return try? context.fetch(descriptor).first
+    }
+
+    private func fetchFirstServer(in context: ModelContext) -> Server? {
+        let descriptor = FetchDescriptor<Server>(
+            sortBy: [SortDescriptor(\.orderIndex)]
+        )
+
+        return try? context.fetch(descriptor).first
     }
 }
 
@@ -113,7 +134,7 @@ private enum ServerDeepLink {
 }
 
 struct McSrvrS_WidgetsEntryView: View {
-    var entry: Provider.Entry
+    var entry: TimelineProvider.Entry
 
     var body: some View {
         ServerItemWidgetView(server: entry.server)
@@ -207,6 +228,7 @@ private struct OnlinePlayersView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 110, alignment: .leading)
+                .multilineTextAlignment(.trailing)
         }
     }
 }
@@ -260,7 +282,7 @@ struct McSrvrS_Widgets: Widget {
     let kind: String = "McSrvrS_Widgets"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: TimelineProvider()) { entry in
             McSrvrS_WidgetsEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
