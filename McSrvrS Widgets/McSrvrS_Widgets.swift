@@ -237,7 +237,7 @@ private struct OnlineDisplayView: View {
     let statusData: ServerStatus.StatusData
 
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             HStack(spacing: 4) {
                 Image(systemName: "cellularbars", variableValue: statusData.variableColor)
                 if let latency = statusData.latency {
